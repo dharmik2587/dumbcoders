@@ -44,20 +44,20 @@ const MODULES = [
 
 export function PlatformStrip() {
   return (
-    <section id="platform" data-zone="light" className="relative bg-paper-2">
+    <section id="platform" data-zone="dark" className="relative bg-ink-950 border-t border-white/10">
       {/* deadline rail */}
-      <div className="border-y border-dark-ink/10 bg-paper">
+      <div className="border-b border-white/10 bg-ink-900">
         <MarqueeRow>
           {deadlineRail.map((item, i) => (
             <span
               key={`${item}-${i}`}
-              className="flex items-center gap-4 whitespace-nowrap border-r border-dark-ink/10 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-muted"
+              className="flex items-center gap-4 whitespace-nowrap border-r border-white/10 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400"
             >
               <span
                 className={
                   item.includes("T-0D") || item.includes("CLOSES")
-                    ? "h-1.5 w-1.5 rounded-full bg-amber"
-                    : "h-1.5 w-1.5 rounded-full bg-mint"
+                    ? "h-1.5 w-1.5 rounded-full bg-amber shadow-[0_0_8px_rgba(255,184,102,0.6)]"
+                    : "h-1.5 w-1.5 rounded-full bg-mint shadow-[0_0_8px_rgba(67,214,194,0.6)]"
                 }
               />
               {item}
@@ -70,11 +70,11 @@ export function PlatformStrip() {
         <div className="grid grid-cols-1 gap-10 py-20 md:grid-cols-12 md:py-24">
           <div className="md:col-span-4">
             <Reveal>
-              <Kicker tone="dark">02 / The platform</Kicker>
-              <h2 className="mt-5 text-[clamp(1.9rem,3.4vw,2.9rem)] font-medium leading-[1.02] tracking-[-0.035em] text-dark-ink">
+              <Kicker tone="beam">02 / The platform</Kicker>
+              <h2 className="mt-5 text-[clamp(1.9rem,3.4vw,2.9rem)] font-medium leading-[1.02] tracking-[-0.035em] text-white">
                 Six things that replace the group chat.
               </h2>
-              <p className="mt-5 max-w-sm text-[14px] leading-relaxed text-slate-muted">
+              <p className="mt-5 max-w-sm text-[14px] leading-relaxed text-slate-400">
                 Every module writes back into the same graph. Bookmark an event and it
                 feeds your matching; request a teammate and it updates your team&apos;s
                 coverage.
@@ -83,7 +83,7 @@ export function PlatformStrip() {
             <Reveal delay={140}>
               <a
                 href="#matching"
-                className="group mt-7 inline-flex items-center gap-2 border-b border-dark-ink/25 pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-dark-ink transition-colors hover:border-beam hover:text-[#2f6ede]"
+                className="group mt-7 inline-flex items-center gap-2 border-b border-white/20 pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-300 transition-colors hover:border-beam hover:text-beam"
               >
                 Read the matching spec
                 <span className="transition-transform duration-300 group-hover:translate-x-1">
@@ -94,25 +94,25 @@ export function PlatformStrip() {
           </div>
 
           <div className="md:col-span-8">
-            <div className="grid grid-cols-1 border-t border-l border-dark-ink/10 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 border-t border-l border-white/10 sm:grid-cols-2 lg:grid-cols-3">
               {MODULES.map((m, i) => (
                 <Reveal
                   key={m.id}
                   delay={i * 70}
-                  className="group relative border-b border-r border-dark-ink/10 bg-paper p-6 transition-colors duration-500 hover:bg-paper-3"
+                  className="group relative border-b border-r border-white/10 bg-ink-900/60 backdrop-blur-sm p-6 transition-colors duration-500 hover:bg-ink-850"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] tracking-[0.18em] text-slate-tech">
+                    <span className="font-mono text-[10px] tracking-[0.18em] text-slate-500">
                       {m.id}
                     </span>
-                    <span className="text-slate-muted transition-colors duration-500 group-hover:text-beam">
+                    <span className="text-slate-400 transition-colors duration-500 group-hover:text-beam">
                       {m.glyph}
                     </span>
                   </div>
-                  <h3 className="mt-6 text-[17px] tracking-[-0.02em] text-dark-ink">
+                  <h3 className="mt-6 text-[17px] font-medium tracking-[-0.02em] text-white">
                     {m.name}
                   </h3>
-                  <p className="mt-2 text-[13px] leading-[1.6] text-slate-muted">
+                  <p className="mt-2 text-[13px] leading-[1.6] text-slate-400">
                     {m.copy}
                   </p>
                   <span className="absolute bottom-0 left-0 h-px w-0 bg-beam transition-all duration-500 group-hover:w-full" />

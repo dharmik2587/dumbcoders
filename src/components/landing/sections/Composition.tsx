@@ -58,22 +58,22 @@ export function Composition() {
   return (
     <section
       id="composition"
-      data-zone="light"
-      className="relative border-t border-dark-ink/10 bg-paper py-24 md:py-32"
+      data-zone="dark"
+      className="relative border-t border-white/10 bg-ink-950 py-24 md:py-32"
     >
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <Reveal>
-              <Kicker tone="dark">07 / Composition</Kicker>
+              <Kicker tone="beam">07 / Composition</Kicker>
             </Reveal>
             <Reveal delay={80}>
-              <h2 className="mt-6 text-[clamp(2rem,4.2vw,3.4rem)] font-medium leading-[1.02] tracking-[-0.04em] text-dark-ink">
+              <h2 className="mt-6 text-[clamp(2rem,4.2vw,3.4rem)] font-medium leading-[1.02] tracking-[-0.04em] text-white">
                 Assemble the team like a system diagram.
               </h2>
             </Reveal>
             <Reveal delay={150}>
-              <p className="mt-6 max-w-md text-[15px] leading-[1.7] text-slate-muted">
+              <p className="mt-6 max-w-md text-[15px] leading-[1.7] text-slate-400">
                 Each accepted request writes into the roster: a role, a stack, and the hours
                 that person is genuinely free. Coverage updates in place, so the team can see
                 what changed and why.
@@ -81,18 +81,18 @@ export function Composition() {
             </Reveal>
 
             <Reveal delay={210}>
-              <div className="mt-9 border border-dark-ink/12 bg-paper-2 p-6">
+              <div className="mt-9 border border-white/10 bg-ink-900/70 backdrop-blur-sm p-6">
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="mono-label text-slate-muted">Roster coverage</div>
-                    <div className="mt-2 font-mono text-[44px] leading-none tnum text-dark-ink">
+                    <div className="mono-label text-slate-400">Roster coverage</div>
+                    <div className="mt-2 font-mono text-[44px] leading-none tnum text-white">
                       {coverage}
-                      <span className="text-[18px] text-slate-tech">%</span>
+                      <span className="text-[18px] text-slate-500">%</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="mono-label text-slate-muted">Target</div>
-                    <div className="mt-2 font-mono text-[18px] tnum text-slate-tech">
+                    <div className="mono-label text-slate-400">Target</div>
+                    <div className="mt-2 font-mono text-[18px] tnum text-slate-400">
                       85%
                     </div>
                   </div>
@@ -100,12 +100,12 @@ export function Composition() {
                 <div className="mt-5">
                   <Meter
                     value={Math.min(coverage, 100)}
-                    theme="light"
+                    theme="dark"
                     tone={coverage >= 85 ? "mint" : "amber"}
                     height={4}
                   />
                 </div>
-                <div className="mt-3 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-slate-muted">
+                <div className="mt-3 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400">
                   <span>{roster.length} members</span>
                   <span>
                     {coverage >= 85 ? "Ready to register" : `${85 - coverage}% short`}
@@ -118,14 +118,14 @@ export function Composition() {
           {/* roster */}
           <div className="lg:col-span-7">
             <Reveal delay={120}>
-              <div className="border border-dark-ink/12">
-                <div className="flex items-center justify-between border-b border-dark-ink/12 px-5 py-3">
-                  <span className="mono-label text-slate-muted">
+              <div className="border border-white/10 bg-ink-900/60 backdrop-blur-sm">
+                <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 bg-ink-900">
+                  <span className="mono-label text-slate-400">
                     Live roster · orbit-04
                   </span>
-                  <span className="mono-label text-[#128a79]">weekly availability</span>
+                  <span className="mono-label text-mint">weekly availability</span>
                 </div>
-                <div className="divide-y divide-dark-ink/10">
+                <div className="divide-y divide-white/10">
                   {roster.map((m) => (
                     <div
                       key={m.name}
@@ -133,18 +133,18 @@ export function Composition() {
                       style={{ animation: "rise .6s cubic-bezier(.16,1,.3,1) both" }}
                     >
                       <div className="col-span-5 md:col-span-4">
-                        <div className="text-[14.5px] tracking-[-0.01em] text-dark-ink">
+                        <div className="text-[14.5px] tracking-[-0.01em] text-white font-medium">
                           {m.name}
                         </div>
-                        <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-muted">
+                        <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400">
                           {m.role}
                         </div>
                       </div>
-                      <div className="col-span-7 flex gap-3 md:col-span-4">
+                      <div className="col-span-7 flex flex-wrap gap-2 md:col-span-4">
                         {m.stack.map((s) => (
                           <span
                             key={s}
-                            className="border border-dark-ink/12 px-2 py-1 font-mono text-[10px] text-slate-muted"
+                            className="border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-slate-300"
                           >
                             {s}
                           </span>
@@ -157,15 +157,15 @@ export function Composition() {
                               className={cn(
                                 "h-5 w-full",
                                 h === 0
-                                  ? "bg-dark-ink/6"
+                                  ? "bg-white/5"
                                   : h <= 1
-                                    ? "bg-beam/25"
+                                    ? "bg-beam/30"
                                     : h === 2
-                                      ? "bg-beam/50"
-                                      : "bg-beam",
+                                      ? "bg-beam/60"
+                                      : "bg-beam shadow-[0_0_8px_rgba(79,140,255,0.7)]",
                               )}
                             />
-                            <span className="font-mono text-[8px] text-slate-tech">
+                            <span className="font-mono text-[8px] text-slate-500">
                               {DAYS[i]}
                             </span>
                           </div>
@@ -181,15 +181,15 @@ export function Composition() {
 
         {/* requests */}
         <Reveal>
-          <div className="mt-16 flex items-baseline justify-between border-b border-dark-ink/15 pb-3">
-            <Kicker tone="dark">Collaboration requests</Kicker>
-            <span className="font-mono text-[10px] tracking-[0.14em] text-slate-tech">
+          <div className="mt-16 flex items-baseline justify-between border-b border-white/10 pb-3">
+            <Kicker tone="beam">Collaboration requests</Kicker>
+            <span className="font-mono text-[10px] tracking-[0.14em] text-slate-500">
               inbound · last 24h
             </span>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-px border-b border-dark-ink/10 bg-dark-ink/10 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-px border-b border-white/10 bg-white/10 md:grid-cols-3">
           {requests.map((r, i) => {
             const d = decisions[r.id] ?? "pending";
             const m = DELTAS[r.id];
@@ -198,45 +198,45 @@ export function Composition() {
                 key={r.id}
                 delay={i * 90}
                 className={cn(
-                  "flex flex-col bg-paper p-6 transition-opacity duration-500",
-                  d === "passed" && "opacity-45",
+                  "flex flex-col bg-ink-900/90 backdrop-blur-sm p-6 transition-opacity duration-500",
+                  d === "passed" && "opacity-40",
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] tracking-[0.16em] text-slate-tech">
+                  <span className="font-mono text-[10px] tracking-[0.16em] text-slate-500">
                     {r.id}
                   </span>
-                  <span className="font-mono text-[10px] text-slate-muted">{r.age}</span>
+                  <span className="font-mono text-[10px] text-slate-400">{r.age}</span>
                 </div>
 
                 <div className="mt-4 flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center border border-dark-ink/12 font-mono text-[11px] text-dark-ink">
+                  <span className="flex h-8 w-8 items-center justify-center border border-white/15 bg-white/[0.04] font-mono text-[11px] text-white">
                     {r.from
                       .split(" ")
                       .map((p) => p[0])
                       .join("")}
                   </span>
                   <div>
-                    <div className="text-[14px] text-dark-ink font-medium">{r.from}</div>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-muted">
+                    <div className="text-[14px] text-white font-medium">{r.from}</div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400">
                       {m.role} · {r.event}
                     </div>
                   </div>
                 </div>
 
-                <p className="mt-4 flex-1 text-[13px] leading-[1.6] text-slate-muted">
+                <p className="mt-4 flex-1 text-[13px] leading-[1.6] text-slate-300">
                   “{r.message}”
                 </p>
 
-                <div className="mt-4 flex items-center gap-2 border-t border-dark-ink/10 pt-4">
-                  <span className="mono-label text-[#128a79]">
+                <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4">
+                  <span className="mono-label text-mint">
                     +{m.coverage}% coverage
                   </span>
                   <span className="ml-auto flex gap-1.5">
                     {d === "accepted" ? (
                       <button
                         onClick={() => set(r.id, "pending")}
-                        className="border border-mint/50 bg-mint/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[#128a79] transition-colors hover:bg-mint/20"
+                        className="border border-mint/50 bg-mint/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-mint transition-colors hover:bg-mint/20"
                       >
                         Added
                       </button>
@@ -244,13 +244,13 @@ export function Composition() {
                       <>
                         <button
                           onClick={() => set(r.id, "accepted")}
-                          className="border border-dark-ink/15 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-dark-ink transition-colors hover:border-beam hover:bg-beam hover:text-white"
+                          className="border border-white/20 bg-white/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white transition-colors hover:border-beam hover:bg-beam"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => set(r.id, "passed")}
-                          className="px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-muted transition-colors hover:text-dark-ink"
+                          className="px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 transition-colors hover:text-white"
                         >
                           Pass
                         </button>

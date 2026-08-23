@@ -35,29 +35,18 @@ export function ScrollProgress() {
 }
 
 export function Nav() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 24);
-      const zones = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-zone]"),
-      );
-      for (const z of zones) {
-        const r = z.getBoundingClientRect();
-        if (r.top <= 56 && r.bottom >= 56) {
-          setTheme(z.dataset.zone === "light" ? "light" : "dark");
-          return;
-        }
-      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const dark = theme === "dark";
+  const dark = true;
 
   return (
     <header
