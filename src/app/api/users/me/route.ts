@@ -46,8 +46,10 @@ export async function PATCH(request: NextRequest) {
     const updated = await updateProfile(user.id, parsed.data);
     if (!updated) return failure('PROFILE_NOT_FOUND', 'Profile could not be updated.', 404);
     return success(updated);
-  } catch (error) {
-    console.error('PATCH /api/users/me failed', error);
-    return failure('DATABASE_ERROR', 'Could not update your profile.', 500);
+  } catch (error: any) {
+    console.error('PATCH /api/users/me failed:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    return failure('DATABASE_ERROR', `Could not update your profile: ${msg}`, 500);
   }
 }
+

@@ -19,8 +19,12 @@ export const profileUpdateSchema = z.object({
   fullName: optionalString(100),
   bio: optionalString(500),
   collegeId: z
-    .union([z.string().trim().max(200), z.literal(''), z.null()])
-    .transform((val) => (val === '' ? null : val))
+    .union([z.string().trim(), z.literal(''), z.null()])
+    .transform((val) => {
+      if (!val || val === '') return null;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+      return isUuid ? val : null;
+    })
     .nullable()
     .optional(),
   branch: optionalString(100),
