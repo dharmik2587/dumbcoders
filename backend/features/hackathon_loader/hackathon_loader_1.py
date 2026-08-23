@@ -96,7 +96,7 @@ def parse_date_to_iso(date_str: Optional[str]) -> Optional[str]:
     return None
 
 
-def extract_from_unstop_api(limit: int = 60) -> List[Dict[str, Any]]:
+def extract_from_unstop_api(limit: int = 100) -> List[Dict[str, Any]]:
     """
     Direct High-Speed Unstop API Extractor.
     Extracts 50-100 real active hackathons from Unstop search results.
@@ -266,7 +266,7 @@ def extract_from_unstop_api(limit: int = 60) -> List[Dict[str, Any]]:
     return hackathons
 
 
-def extract_from_apify(token: str, limit: int = 60) -> List[Dict[str, Any]]:
+def extract_from_apify(token: str, limit: int = 100) -> List[Dict[str, Any]]:
     """
     Extracts hackathons using Apify Client Actor.
     """
@@ -340,7 +340,7 @@ def run_hackathon_loader_job():
     logger.info("=" * 60)
 
     token = os.getenv("APIFY_API_TOKEN", APIFY_API_TOKEN)
-    hackathons = extract_from_apify(token=token, limit=60)
+    hackathons = extract_from_apify(token=token, limit=100)
 
     if not hackathons:
         logger.warning("Loader could not extract any hackathons.")
@@ -355,7 +355,7 @@ def main():
     parser = argparse.ArgumentParser(description="Feature 1: HackMate Hackathon Loader (Apify & Unstop)")
     parser.add_argument("--sync", action="store_true", help="Run a one-time synchronization immediately")
     parser.add_argument("--schedule", action="store_true", help="Run in daemon mode with daily automated refresh")
-    parser.add_argument("--limit", type=int, default=60, help="Number of hackathons to extract (50-100)")
+    parser.add_argument("--limit", type=int, default=100, help="Number of hackathons to extract (50-100)")
     args = parser.parse_args()
 
     if args.sync or not args.schedule:

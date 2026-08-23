@@ -35,9 +35,8 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = profileUpdateSchema.safeParse(body);
   if (!parsed.success) {
-    return failure('VALIDATION_ERROR', 'The profile data is invalid.', 400, {
-      headers: { 'content-type': 'application/json' },
-    });
+    const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
+    return failure('VALIDATION_ERROR', `Profile data is invalid: ${issues.join('; ')}`, 400);
   }
 
   try {

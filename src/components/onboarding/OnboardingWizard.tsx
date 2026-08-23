@@ -39,11 +39,22 @@ export function OnboardingWizard() {
   async function complete() {
     setSaving(true);
     setError('');
+
+    // Client-side sanitization
+    const payload = {
+      ...form,
+      // Convert empty collegeId to null
+      collegeId: form.collegeId || null,
+      // Handle NaN graduation year
+      graduationYear: isNaN(form.graduationYear) ? null : form.graduationYear,
+      onboardingDone: true,
+    };
+
     try {
       const response = await fetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...form, onboardingDone: true }),
+        body: JSON.stringify(payload),
       });
       setSaving(false);
       if (!response.ok) {
