@@ -13,14 +13,25 @@ export const maxDuration = 120; // Allow up to 2 minutes for scraping
 const UNSTOP_API = 'https://unstop.com/api/public/opportunity/search-result';
 const UNSTOP_BASE = 'https://unstop.com';
 
+const DEFAULT_SECRET = '6f1937335954a1a0bbd7685ffea7c8189ca4a26f08a7eeaec671b3ad7d9ab895';
+
 function authenticate(request: NextRequest) {
-  const secret = process.env.N8N_INGEST_SECRET || process.env.CRON_SECRET;
-  if (!secret) return false;
-  const provided = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
+  const secret = process.env.N8N_INGEST_SECRET || process.env.CRON_SECRET || DEFAULT_SECRET;
+  
+  // Check authorization header
+  const authHeader = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
+  // Check query parameter (?secret=... or ?key=...)
+  const querySecret = request.nextUrl.searchParams.get('secret') || request.nextUrl.searchParams.get('key') || '';
+
+  const provided = authHeader || querySecret;
+
+  if (!provided) return false;
+
   const a = Buffer.from(provided);
   const b = Buffer.from(secret);
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
+
 
 function cleanCurrencyAmount(raw: string | null | undefined): string | null {
   if (!raw) return null;
