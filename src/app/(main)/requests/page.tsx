@@ -427,8 +427,8 @@ function TeamsIndex() {
                 <Button
                   size="sm"
                   disabled={name.trim().length < 2}
-                  onClick={() => {
-                    const id = createTeam({
+                  onClick={async () => {
+                    const id = await createTeam({
                       name: name.trim(),
                       hackathonId: hk,
                       ownerId: me.id,

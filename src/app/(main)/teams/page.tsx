@@ -274,6 +274,8 @@ function TeamsIndex() {
   const [name, setName] = useState("");
   const [hk, setHk] = useState(hackathons[0]?.id ?? "");
   const [cap, setCap] = useState(4);
+  const [joinCode, setJoinCode] = useState("");
+  const [joining, setJoining] = useState(false);
 
   return (
     <div className="mx-auto max-w-[1400px]">
@@ -283,9 +285,36 @@ function TeamsIndex() {
         title={<>Assemble the team like a system diagram.</>}
         sub="Each team is a coverage problem: a set of clusters, the members who hold them, and the slots still open."
         right={
-          <Button onClick={() => setCreating(true)}>
-            <Send size={13} /> Create team
-          </Button>
+          <div className="flex gap-2">
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!joinCode.trim()) return;
+              setJoining(true);
+              try {
+                const { applyToTeam } = await import("@/client/lib/api/teams");
+                await applyToTeam(joinCode.trim(), "Joining via team code");
+                pushToast({ label: "Success", body: "Request sent to join team.", tone: "good" });
+                setJoinCode("");
+              } catch (e) {
+                pushToast({ label: "Error", body: "Could not join. Check the code.", tone: "bad" });
+              } finally {
+                setJoining(false);
+              }
+            }} className="flex">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                placeholder="Enter Team ID"
+                className="w-32 bg-canvas px-3 py-1 text-[12px] border border-line outline-none focus:border-accent"
+              />
+              <Button type="submit" disabled={!joinCode.trim() || joining} className="rounded-l-none border-l-0">
+                Join
+              </Button>
+            </form>
+            <Button onClick={() => setCreating(true)}>
+              <Send size={13} /> Create team
+            </Button>
+          </div>
         }
       />
 
@@ -304,6 +333,9 @@ function TeamsIndex() {
                     </Link>
                     <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-fg3">
                       {h?.name} · {t.members.length}/{h?.maxTeamSize ?? 4}
+                    </div>
+                    <div className="mt-2 font-mono text-[9px] text-accent">
+                      Team ID: {t.id}
                     </div>
                   </div>
                   <button
@@ -427,8 +459,8 @@ function TeamsIndex() {
                 <Button
                   size="sm"
                   disabled={name.trim().length < 2}
-                  onClick={() => {
-                    const id = createTeam({
+                  onClick={async () => {
+                    const id = await createTeam({
                       name: name.trim(),
                       hackathonId: hk,
                       ownerId: me.id,

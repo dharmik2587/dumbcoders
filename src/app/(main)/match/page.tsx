@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Check, ChevronDown, Send, Sparkles, UserPlus } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Send, Sparkles, UserPlus, MessageSquare } from "lucide-react";
 import { byIdMap, useActiveTeam, useMe, useApiStore } from "@/client/store/apiStore";
 import { ROLE_LABEL, ROLES, type RoleKey } from "@/client/types";
 import { CLUSTER_NAME, CLUSTER_ORDER } from "@/client/data/seed";
@@ -489,6 +489,12 @@ function CandidateRow({
                 <div className="flex gap-2">
                   <Button size="sm" onClick={onCompose}>
                     <UserPlus size={12} /> Send request
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    // Just a mock action or routing to messages
+                    window.location.href = "/messages";
+                  }}>
+                    <MessageSquare size={12} /> Message
                   </Button>
                   <Link href={`/b/${b.id}`}>
                     <Button size="sm" variant="outline">Profile</Button>

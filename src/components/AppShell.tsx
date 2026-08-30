@@ -22,6 +22,7 @@ import {
   Users,
   UserRound,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/client/utils/cn";
 
@@ -38,6 +39,7 @@ const NAV = [
   { to: "/requests", label: "Requests", icon: Inbox, key: "g r" },
   { to: "/teams", label: "Teams", icon: Users, key: "g t" },
   { to: "/leaderboard", label: "Leaderboard", icon: Trophy, key: "g l" },
+  { to: "/messages", label: "Messages", icon: MessageSquare, key: "g x" },
   { to: "/calendar", label: "Calendar", icon: CalendarDays, key: "g c" },
   { to: "/profile", label: "Profile", icon: UserRound, key: "g p" },
   { to: "/settings", label: "Settings", icon: Settings, key: "g s" },

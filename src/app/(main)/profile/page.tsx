@@ -142,8 +142,8 @@ export default function Profile() {
                 <Field label="handle">
                   <Input value={me.handle} onChange={(e) => patch({ handle: e.target.value })} />
                 </Field>
-                <Field label="student code">
-                  <Input value={me.studentCode || 'Not Assigned'} disabled className="bg-hover" />
+                <Field label="unique id (student code)">
+                  <Input value={me.studentCode || 'Not Assigned'} disabled className="bg-hover font-mono text-accent" />
                 </Field>
                 <Field label="college">
                   <Input value={me.college} onChange={(e) => patch({ college: e.target.value })} />
