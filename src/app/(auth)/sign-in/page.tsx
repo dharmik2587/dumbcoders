@@ -11,7 +11,7 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
+  const redirectTo = searchParams.get('redirectTo') || '/discover';
   const callbackError = searchParams.get('error');
 
   const signIn = useApiStore((s) => s.signIn);
