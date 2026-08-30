@@ -389,7 +389,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const requests = useStore((s) => s.requests); // Keep seed data for now
   const signOut = useApiStore((s) => s.signOut);
   const toggle = useTheme().toggle;
-  const unread = requests.filter((r) => r.state === "new" && r.toId !== me.id).length;
+  const unread = requests.filter((r) => r.state === "new" && r.toId !== me?.id).length;
   const team = teams.find((t) => t.id === activeTeamId) ?? teams[0];
 
   useEffect(() => {
@@ -487,7 +487,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="group flex w-full items-center gap-2.5 border border-line bg-raised p-2 text-left transition-colors hover:border-accent-line"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-accent-line bg-accent-soft font-mono text-[10px] text-accent">
-              {team?.name.slice(0, 2).toUpperCase() ?? "—"}
+              {team?.name?.slice(0, 2)?.toUpperCase() ?? "—"}
             </span>
             {!collapsed && (
               <span className="min-w-0 flex-1">
@@ -589,12 +589,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-line bg-canvas font-mono text-[10px] text-fg">
-              {me.initials}
+              {me?.initials ?? "U"}
             </span>
             {!collapsed && (
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] text-fg">{me.name}</span>
-                <span className="mono-label block truncate text-fg3">{ROLE_LABEL[me.role as RoleKey]}</span>
+                <span className="block truncate text-[12.5px] text-fg">{me?.name ?? "Loading..."}</span>
+                <span className="mono-label block truncate text-fg3">{me?.role ? ROLE_LABEL[me.role as RoleKey] : "..."}</span>
               </span>
             )}
           </Link>
