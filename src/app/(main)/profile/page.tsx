@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GitBranch, Globe, GraduationCap, Plus, Save, Trash2 } from "lucide-react";
+import { GitBranch, Globe, GraduationCap, Plus, Save, Trash2, Loader2, CheckCircle2, Mail } from "lucide-react";
 import { useMe, useApiStore } from "@/client/store/apiStore";
 import { CLUSTERS } from "@/client/data/seed";
 import { ROLES, ROLE_LABEL, type RoleKey } from "@/client/types";
+import { post } from "@/client/lib/api/client";
 import { AvailabilityGrid, AvailabilityStrip, LevelPicker, roleTone } from "@/components/shared";
 import {
   Button,
@@ -34,6 +35,81 @@ export default function Profile() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [snapshot] = useState(() => JSON.stringify(initialMe));
+
+  // College Email OTP Verification State
+  const [collegeEmailInput, setCollegeEmailInput] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
+  const [devOtpHint, setDevOtpHint] = useState('');
+
+  // Check if email has valid educational domain
+  const isEduDomain = (email: string) => {
+    if (!email || !email.includes('@')) return false;
+    const domain = email.split('@')[1]?.toLowerCase().trim();
+    if (!domain) return false;
+    const nonEdu = ['gmail.com', 'yahoo.com', 'yahoo.in', 'outlook.com', 'hotmail.com', 'icloud.com'];
+    if (nonEdu.includes(domain)) return false;
+    return /\.(edu|ac\.in|edu\.in|res\.in|org\.in|in)$/i.test(domain);
+  };
+
+  async function handleSendCollegeOtp() {
+    if (!isEduDomain(collegeEmailInput)) {
+      setOtpError('Please enter a valid college email ending with .edu, .ac.in, .edu.in, or .in');
+      return;
+    }
+
+    setSendingOtp(true);
+    setOtpError('');
+    setOtpSuccess('');
+    setDevOtpHint('');
+
+    try {
+      const data = await post<any>('/api/verify/college/send-otp', { email: collegeEmailInput });
+      setSendingOtp(false);
+
+      setOtpSent(true);
+      setOtpSuccess(`Verification code sent to ${collegeEmailInput}!`);
+      if (data?.data?.devOtp) {
+        setDevOtpHint(data.data.devOtp);
+      }
+    } catch (err: any) {
+      setSendingOtp(false);
+      setOtpError(err?.message || 'Failed to connect to verification server.');
+    }
+  }
+
+  async function handleVerifyCollegeOtp() {
+    if (!otpCode || otpCode.length < 4) {
+      setOtpError('Please enter the 6-digit code received on your email.');
+      return;
+    }
+
+    setVerifyingOtp(true);
+    setOtpError('');
+    setOtpSuccess('');
+
+    try {
+      const data = await post<any>('/api/verify/college/verify-otp', { email: collegeEmailInput, code: otpCode });
+      setVerifyingOtp(false);
+
+      const college = data?.data?.college;
+      setOtpSuccess(`Verified! Affiliated with ${college?.shortName || college?.name || 'your institution'}.`);
+      setMe((prev) => ({
+        ...prev,
+        college: college?.shortName || college?.name || prev.college,
+        verified: true,
+      }));
+      setDirty(true);
+      void loadUser();
+    } catch (err: any) {
+      setVerifyingOtp(false);
+      setOtpError(err?.message || 'Failed to verify code.');
+    }
+  }
 
   useEffect(() => {
     if (!initialMe) {
@@ -436,17 +512,96 @@ export default function Profile() {
               <div className="border-b border-line px-5 py-3">
                 <Label tone="accent">verification</Label>
               </div>
-              <div className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <GraduationCap size={14} className="text-mint" />
-                  <span className="text-[13px] text-fg">
-                    {me.verified ? `${me.college} verified` : "Not verified"}
-                  </span>
-                </div>
+              <div className="px-5 py-4 space-y-4">
+                {me.verified ? (
+                  <div className="flex items-center gap-3 border border-mint/20 bg-mint/5 p-4 text-mint">
+                    <CheckCircle2 size={22} className="shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-bold">Verified Student Identity</p>
+                      <p className="text-[11px] opacity-80 truncate">{me.email || 'Institutional Email'} · {me.college}</p>
+                    </div>
+                    <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-mint">
+                      Verified ✓
+                    </span>
+                  </div>
+                ) : (
+                  <div className="border border-line bg-raised p-4 space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <GraduationCap size={18} className="text-accent" />
+                      <div>
+                        <h3 className="text-[13px] font-bold text-fg">Verify College Email</h3>
+                        <p className="text-[11px] text-fg3">Only .edu, .ac.in, .edu.in, or .in accepted.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 pt-1">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            type="email"
+                            value={collegeEmailInput}
+                            onChange={(e) => {
+                              setCollegeEmailInput(e.target.value);
+                              setOtpError('');
+                            }}
+                            placeholder="student@college.ac.in"
+                            className="pl-9"
+                            disabled={sendingOtp || otpSent}
+                          />
+                          <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-fg3" />
+                        </div>
+                        {!otpSent && (
+                          <Button
+                            variant="primary"
+                            disabled={sendingOtp || !collegeEmailInput || !isEduDomain(collegeEmailInput)}
+                            onClick={handleSendCollegeOtp}
+                            className="shrink-0"
+                          >
+                            {sendingOtp ? <Loader2 size={14} className="animate-spin" /> : 'Send Code'}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* OTP Verification Box */}
+                      {otpSent && (
+                        <div className="mt-3 border border-line bg-surface p-4 space-y-3">
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              maxLength={6}
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                              placeholder="123456"
+                              className="font-mono text-center tracking-[0.3em] font-bold text-base w-32"
+                            />
+                            <Button
+                              variant="outline"
+                              disabled={verifyingOtp || otpCode.length < 4}
+                              onClick={handleVerifyCollegeOtp}
+                              className="shrink-0"
+                            >
+                              {verifyingOtp ? <Loader2 size={14} className="animate-spin" /> : 'Verify Code'}
+                            </Button>
+                          </div>
+
+                          {devOtpHint && (
+                            <div className="bg-amber/10 p-2 text-center text-[11px] text-amber">
+                              ⚡ Dev Sandbox Code: <strong className="font-mono">{devOtpHint}</strong>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {otpError && <p className="text-[11px] font-medium text-danger">{otpError}</p>}
+                      {otpSuccess && !me.verified && <p className="text-[11px] font-medium text-mint">{otpSuccess}</p>}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="mt-3 flex items-center gap-2">
                   <Globe size={13} className="text-fg3" />
                   <span className="font-mono text-[10px] text-fg3">
-                    discoverable · accepting requests
+                    {me.verified ? "discoverable · accepting requests" : "verification required to access features"}
                   </span>
                 </div>
               </div>

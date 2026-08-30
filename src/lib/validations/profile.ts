@@ -41,6 +41,7 @@ export const profileUpdateSchema = z.object({
   availability: optionalString(120),
   portfolioUrl: optionalUrl,
   linkedinUrl: optionalUrl,
+  collegeEmail: optionalString(150),
   onboardingDone: z.boolean().optional(),
   isOpenToTeam: z.boolean().optional(),
 });

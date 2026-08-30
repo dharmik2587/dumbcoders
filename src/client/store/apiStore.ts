@@ -40,7 +40,7 @@ export function mapProfileToBuilder(profile: any): Builder {
     availability: profile.availability ? [{ day: 6, start: 9, end: 17 }] : [],
     weeklyHours: 10,
     openToTeams: !!profile.isOpenToTeam,
-    verified: true,
+    verified: Boolean(profile.collegeId || profile.college?.id || profile.verified),
     lastActive: profile.updatedAt || new Date().toISOString(),
     onboardingDone: !!profile.onboardingDone,
   } as any;
@@ -391,8 +391,11 @@ export const useApiStore = create<State>()(
         try {
           const user = await api.getCurrentUser();
           set({ me: mapProfileToBuilder(user) });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to load user:', error);
+          if (error?.status === 401) {
+            get().signOut();
+          }
         }
       },
       

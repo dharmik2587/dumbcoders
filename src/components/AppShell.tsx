@@ -395,12 +395,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("hackmate.rail", collapsed ? "1" : "0");
   }, [collapsed]);
 
-  // Client-side onboarding guard: redirect to /onboarding if profile is incomplete
+  // Client-side onboarding and verification guards
   useEffect(() => {
-    if (me && (me as any).onboardingDone === false) {
+    if (!me) return;
+    if ((me as any).onboardingDone === false) {
       router.replace('/onboarding');
+    } else if (me.verified === false && pathname !== '/profile') {
+      router.replace('/profile');
     }
-  }, [me, router]);
+  }, [me, router, pathname]);
 
   useEffect(() => setMobileNav(false), [pathname]);
 

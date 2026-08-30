@@ -51,6 +51,7 @@ export type Builder = {
   secondary: RoleKey[];
   avatar?: string;
   avatarUrl?: string;
+  email?: string;
   goal: "win" | "learn" | "ship";
   bio: string;
   skills: Skill[];

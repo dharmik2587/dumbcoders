@@ -8,8 +8,9 @@ import { profileUpdateSchema } from '@/lib/validations/profile';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
-  const user = await getOptionalUser();
+export async function GET(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  const user = await getOptionalUser(token);
   if (!user) return failure('UNAUTHORIZED', 'Sign in to continue.', 401);
   if (!hasCoreDatabase()) return failure('NOT_CONFIGURED', 'Database is not configured.', 503);
 
@@ -31,9 +32,10 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
   let user;
   try {
-    user = await requireUser();
+    user = await requireUser(token);
   } catch {
     return failure('UNAUTHORIZED', 'Sign in to continue.', 401);
   }

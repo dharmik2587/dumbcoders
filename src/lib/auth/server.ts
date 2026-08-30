@@ -1,13 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { hasSupabaseConfig } from '@/lib/env';
 
-export async function getOptionalUser() {
+export async function getOptionalUser(token?: string) {
   if (!hasSupabaseConfig()) return null;
   try {
     const supabase = await createClient();
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
     return user ?? null;
   } catch (error) {
     console.error('getOptionalUser error:', error);
@@ -15,12 +15,12 @@ export async function getOptionalUser() {
   }
 }
 
-export async function getOptionalUserId(): Promise<string | null> {
-  const user = await getOptionalUser();
+export async function getOptionalUserId(token?: string): Promise<string | null> {
+  const user = await getOptionalUser(token);
   return user?.id ?? null;
 }
 
-export async function requireUser() {
+export async function requireUser(token?: string) {
   if (!hasSupabaseConfig()) {
     throw new Error('Supabase is not configured');
   }
@@ -29,7 +29,7 @@ export async function requireUser() {
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser();
+  } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
 
   if (error || !user) {
     throw new Error('Unauthenticated');
@@ -38,7 +38,7 @@ export async function requireUser() {
   return user;
 }
 
-export async function requireUserId(): Promise<string> {
-  const user = await requireUser();
+export async function requireUserId(token?: string): Promise<string> {
+  const user = await requireUser(token);
   return user.id;
 }

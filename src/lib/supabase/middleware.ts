@@ -72,13 +72,21 @@ export async function updateSession(request: NextRequest) {
       // Lightweight check: query the profile's onboarding status directly
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.CORE_DATABASE_URL);
-      const rows = await sql`SELECT onboarding_done FROM profiles WHERE id = ${user.id} LIMIT 1`;
+      const rows = await sql`SELECT onboarding_done, college_id FROM profiles WHERE id = ${user.id} LIMIT 1`;
       const profile = rows[0];
 
       // If profile doesn't exist yet or onboarding is not done, redirect to onboarding
       if (!profile || !profile.onboarding_done) {
         const onboardingUrl = new URL('/onboarding', request.url);
         return NextResponse.redirect(onboardingUrl);
+      }
+
+      // Verification lock: if onboarding is done but college email is not verified, lock all features except /profile
+      if (profile.onboarding_done && !profile.college_id) {
+        if (pathname !== '/profile') {
+          const profileUrl = new URL('/profile', request.url);
+          return NextResponse.redirect(profileUrl);
+        }
       }
     } catch (e) {
       // If DB check fails, don't block the user — let them through
