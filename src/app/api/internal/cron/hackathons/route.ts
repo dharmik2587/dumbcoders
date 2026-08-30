@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { hasCoreDatabase, getCoreDb } from '@/lib/db/core';
 import { ingestionRuns } from '@/lib/db/schema/core';
-import { upsertHackathonSource } from '@/lib/db/queries/hackathons';
+import { upsertHackathonSource, closeExpiredHackathons } from '@/lib/db/queries/hackathons';
 import { hackathonIngestItemSchema } from '@/lib/validations/hackathon';
 import { failure, success } from '@/lib/http';
 
@@ -304,6 +304,13 @@ export async function POST(request: NextRequest) {
       errors,
       finishedAt: new Date(),
     }).where(eq(ingestionRuns.id, run.id));
+  }
+
+  // Auto-close any past hackathons
+  try {
+    await closeExpiredHackathons();
+  } catch (e) {
+    console.error('Failed to close expired hackathons in internal cron:', e);
   }
 
   console.log(`[Cron] Hackathon refresh done. Created: ${created}, Updated: ${updated}, Rejected: ${rejected}`);

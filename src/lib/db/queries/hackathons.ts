@@ -86,6 +86,16 @@ export async function getHackathonById(id: string) {
   return rows[0] ?? null;
 }
 
+export async function closeExpiredHackathons(): Promise<number> {
+  const db = getCoreDb();
+  const res = await db
+    .update(hackathons)
+    .set({ status: 'closed', updatedAt: new Date() })
+    .where(and(sql`${hackathons.registrationDeadlineAt} < NOW()`, sql`${hackathons.status} != 'closed'`))
+    .returning({ id: hackathons.id });
+  return res.length;
+}
+
 export async function listHackathons(filters: {
   q?: string;
   source?: string;
@@ -96,8 +106,23 @@ export async function listHackathons(filters: {
   pageSize: number;
 }) {
   const db = getCoreDb();
+  
+  // Auto-close any past hackathons on query
+  try {
+    await closeExpiredHackathons();
+  } catch (err) {
+    console.error('Failed auto-closing expired hackathons:', err);
+  }
+
   const conditions = [];
-  if (filters.status) conditions.push(eq(hackathons.status, filters.status));
+  if (filters.status && filters.status !== 'all') {
+    conditions.push(eq(hackathons.status, filters.status));
+  } else if (!filters.status) {
+    // Default to published active hackathons only
+    conditions.push(eq(hackathons.status, 'published'));
+    conditions.push(sql`(${hackathons.registrationDeadlineAt} >= NOW() OR ${hackathons.registrationDeadlineAt} IS NULL)`);
+  }
+
   if (filters.source) conditions.push(sql`exists (select 1 from ${hackathonSources} hs where hs.hackathon_id = ${hackathons.id} and hs.source = ${filters.source})`);
   if (filters.mode) conditions.push(eq(hackathons.mode, filters.mode));
   if (filters.theme) conditions.push(sql`${hackathons.themes} @> ARRAY[${filters.theme}]::text[]`);

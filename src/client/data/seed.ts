@@ -159,10 +159,12 @@ export const HACKATHONS: Hackathon[] = RAW_EVENTS.map(
   },
 );
 
-export const daysLeft = (h: Hackathon) =>
-  Math.round(
-    (new Date(h.registerDeadline).getTime() - NOW.getTime()) / day,
+export const daysLeft = (h: Hackathon) => {
+  if (!h || !h.registerDeadline) return 0;
+  return Math.ceil(
+    (new Date(h.registerDeadline).getTime() - Date.now()) / day,
   );
+};
 
 /* ---------------------------------------------------------------
    Builders

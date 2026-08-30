@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCoreDb, hasCoreDatabase } from '@/lib/db/core';
-import { upsertHackathonSource } from '@/lib/db/queries/hackathons';
+import { upsertHackathonSource, closeExpiredHackathons } from '@/lib/db/queries/hackathons';
 import { HackathonIngestItem } from '@/lib/validations/hackathon';
 
 export const runtime = 'nodejs'; // Use nodejs runtime for robust fetching/parsing
@@ -146,11 +146,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Auto-close any expired hackathons
+  let closedCount = 0;
+  try {
+    closedCount = await closeExpiredHackathons();
+  } catch (e) {
+    console.error('Failed to close expired hackathons during cron run:', e);
+  }
+
   return NextResponse.json({
     success: true,
     totalFetched: allItems.length,
     created,
     updated,
+    closedExpired: closedCount,
     errors: errors.length > 0 ? errors : undefined
   });
 }
