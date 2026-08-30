@@ -12,8 +12,7 @@ function GithubIcon({ size = 16, className = "" }: { size?: number; className?: 
     </svg>
   );
 }
-import { useStore } from "@/client/store/useStore";
-import { useApiStore } from "@/client/store/apiStore";
+import { useApiStore, useMe } from "@/client/store/apiStore";
 import { Avatar } from "@/components/shared";
 import {
   Label,
@@ -191,14 +190,14 @@ function Leaderboard() {
   const leaderboard = useApiStore((s) => s.leaderboard);
   const leaderboardLoading = useApiStore((s) => s.leaderboardLoading);
   const loadLeaderboard = useApiStore((s) => s.loadLeaderboard);
-  const me = useStore((s) => s.meId);
+  const me = useMe();
   const [scope, setScope] = useState<"global" | "college" | "batch">("global");
 
   useEffect(() => {
     loadLeaderboard({ scope });
   }, [loadLeaderboard, scope]);
 
-  const myRank = leaderboard.findIndex((e: any) => e.userId === me) + 1;
+  const myRank = leaderboard.findIndex((e: any) => e.userId === me?.id) + 1;
 
   return (
     <div className="mx-auto max-w-[1400px]">
@@ -285,7 +284,7 @@ function Leaderboard() {
                 </div>
               ) : (
                 leaderboard.map((entry: any) => {
-                  const isMe = entry.userId === me;
+                  const isMe = entry.userId === me?.id;
                   const top3 = entry.rank <= 3;
                   return (
                     <div

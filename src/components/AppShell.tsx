@@ -26,8 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/client/utils/cn";
 
-import { useStore, useMe } from "@/client/store/useStore";
-import { useApiStore } from "@/client/store/apiStore";
+import { useApiStore, useMe } from "@/client/store/apiStore";
 import { Toaster, IconButton } from "./ui";
 import { daysLeft } from "@/client/data/seed";
 import { ROLE_LABEL, RoleKey } from "@/client/types";
@@ -85,9 +84,9 @@ function CountdownChip() {
 
 function Notifications() {
   const [open, setOpen] = useState(false);
-  const notes = useStore((s) => s.notifications); // Keep seed data for now
-  const read = useStore((s) => s.readNotification);
-  const readAll = useStore((s) => s.readAllNotifications);
+  const notes = useApiStore((s) => s.notifications);
+  const read = useApiStore((s) => s.readNotification);
+  const readAll = useApiStore((s) => s.readAllNotifications);
   const unread = notes.filter((n) => !n.read).length;
   const ref = useRef<HTMLDivElement>(null);
 
@@ -177,7 +176,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   const [idx, setIdx] = useState(0);
   const router = useRouter();
   const hackathons = useApiStore((s) => s.hackathons);
-  const builders = useStore((s) => s.builders); // Keep seed data for now
+  const builders = useApiStore((s) => s.builders);
   const teams = useApiStore((s) => s.teams);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -386,7 +385,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const teams = useApiStore((s) => s.teams);
   const activeTeamId = useApiStore((s) => s.activeTeamId);
   const setActiveTeam = useApiStore((s) => s.setActiveTeam);
-  const requests = useStore((s) => s.requests); // Keep seed data for now
+  const requests = useApiStore((s) => s.requests);
   const signOut = useApiStore((s) => s.signOut);
   const toggle = useTheme().toggle;
   const unread = requests.filter((r) => r.state === "new" && r.toId !== me?.id).length;
@@ -395,6 +394,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem("hackmate.rail", collapsed ? "1" : "0");
   }, [collapsed]);
+
+  // Client-side onboarding guard: redirect to /onboarding if profile is incomplete
+  useEffect(() => {
+    if (me && (me as any).onboardingDone === false) {
+      router.replace('/onboarding');
+    }
+  }, [me, router]);
 
   useEffect(() => setMobileNav(false), [pathname]);
 
@@ -588,9 +594,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               collapsed && "justify-center",
             )}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-line bg-canvas font-mono text-[10px] text-fg">
-              {me?.initials ?? "U"}
-            </span>
+            {me?.avatarUrl ? (
+              <img
+                src={me.avatarUrl}
+                alt={me.name || 'Profile'}
+                className="h-7 w-7 shrink-0 border border-line bg-canvas object-cover"
+              />
+            ) : (
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-line bg-canvas font-mono text-[10px] text-fg">
+                {me?.initials ?? "U"}
+              </span>
+            )}
             {!collapsed && (
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] text-fg">{me?.name ?? "Loading..."}</span>

@@ -3,8 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
-import { useStore } from "@/client/store/useStore";
-import { useApiStore } from "@/client/store/apiStore";
+import { useApiStore, useMe } from "@/client/store/apiStore";
 import { EventStateChip, fmtDate, inr, Avatar } from "@/components/shared";
 import { daysLeft } from "@/client/data/seed";
 import {
@@ -28,7 +27,7 @@ function Leaderboard() {
   const leaderboard = useApiStore((s) => s.leaderboard);
   const leaderboardLoading = useApiStore((s) => s.leaderboardLoading);
   const loadLeaderboard = useApiStore((s) => s.loadLeaderboard);
-  const me = useStore((s) => s.meId);
+  const me = useMe();
   const [scope, setScope] = useState<"global" | "college" | "batch">("global");
 
   useEffect(() => {
@@ -397,8 +396,8 @@ function Calendar() {
 /* Settings                                                            */
 /* ------------------------------------------------------------------ */
 function Settings() {
-  const prefs = useStore((s) => s.prefs);
-  const setPref = useStore((s) => s.setPref);
+  const prefs = useApiStore((s) => s.prefs);
+  const setPref = useApiStore((s) => s.setPref);
   const pushToast = useApiStore((s) => s.pushToast);
 
   const groups: { title: string; note: string; items: [keyof typeof prefs, string, string][] }[] = [

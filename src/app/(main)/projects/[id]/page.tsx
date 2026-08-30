@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 
 import { motion } from "framer-motion";
 import { GripVertical, Plus } from "lucide-react";
-import { useStore } from "@/client/store/useStore";
 import { useApiStore, byIdMap } from "@/client/store/apiStore";
 import { Avatar, relTime } from "@/components/shared";
 import {
@@ -34,14 +33,14 @@ type Col = (typeof COLUMNS)[number]["id"];
 
 export default function ProjectWorkspace() {
   const { id } = useParams();
-  const projects = useStore((s) => s.projects);
+  const projects = useApiStore((s) => s.projects);
   const teams = useApiStore((s) => s.teams);
   const builders = useApiStore((s) => s.builders);
   const hackathons = useApiStore((s) => s.hackathons);
-  const moveTask = useStore((s) => s.moveTask);
-  const addTask = useStore((s) => s.addTask);
-  const toggleChecklist = useStore((s) => s.toggleChecklist);
-  const setNotes = useStore((s) => s.setNotes);
+  const moveTask = useApiStore((s) => s.moveTask);
+  const addTask = useApiStore((s) => s.addTask);
+  const toggleChecklist = useApiStore((s) => s.toggleChecklist);
+  const setNotes = useApiStore((s) => s.setNotes);
   const pushToast = useApiStore((s) => s.pushToast);
   const byId = useMemo(() => byIdMap(builders), [builders]);
   const t = useChartTokens();

@@ -45,6 +45,19 @@ function SignInContent() {
     setLoading(true);
     try {
       await signIn(email, password);
+      // Check if onboarding is complete before redirecting
+      try {
+        const res = await fetch('/api/users/me');
+        if (res.ok) {
+          const body = await res.json();
+          if (body.data && !body.data.onboardingDone) {
+            router.push('/onboarding');
+            return;
+          }
+        }
+      } catch {
+        // If profile check fails, redirect to onboarding to be safe
+      }
       router.push(redirectTo);
     } catch (err) {
       setLoading(false);

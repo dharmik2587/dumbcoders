@@ -35,7 +35,12 @@ function Requests() {
   const [tab, setTab] = useState<"inbox" | "sent">("inbox");
   const [loading, setLoading] = useState(true);
   const me = useMe();
+  const loadRequests = useApiStore((s) => s.loadRequests);
   const requests = useApiStore((s) => s.requests);
+
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
   const teams = useApiStore((s) => s.teams);
   const loadTeams = useApiStore((s) => s.loadTeams);
   const builders = useApiStore((s) => s.builders);
@@ -50,6 +55,14 @@ function Requests() {
   if (loading) {
     return (
       <div className="mx-auto max-w-[1400px] py-16 text-center">
+        <div className="mono-label text-fg3 animate-pulse">loading requests…</div>
+      </div>
+    );
+  }
+
+  if (!me) {
+    return (
+      <div className="flex h-full items-center justify-center">
         <div className="mono-label text-fg3 animate-pulse">loading requests…</div>
       </div>
     );

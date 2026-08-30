@@ -1,6 +1,25 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Paths that do NOT require onboarding to be completed.
+ * Everything else under /(main)/* requires onboarding.
+ */
+const ONBOARDING_EXEMPT = new Set([
+  '/sign-in',
+  '/sign-up',
+  '/onboarding',
+]);
+
+function isOnboardingExempt(pathname: string) {
+  if (pathname === '/') return true;
+  if (pathname.startsWith('/auth/')) return true;
+  if (pathname.startsWith('/api/')) return true;
+  if (pathname.startsWith('/_next/')) return true;
+  if (pathname.startsWith('/hackathons')) return true;
+  return ONBOARDING_EXEMPT.has(pathname);
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -39,16 +58,33 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const publicPrefixes = [
-    '/',
-    '/sign-in',
-    '/sign-up',
-    '/auth/callback',
-    '/hackathons',
-    '/find-partners',
-    '/profile',
-    '/api',
-  ];
+  const pathname = request.nextUrl.pathname;
+
+  // Redirect authenticated users from landing page to discover
+  if (user && pathname === '/') {
+    return NextResponse.redirect(new URL('/discover', request.url));
+  }
+
+  // Onboarding gate: if user is authenticated and visiting a protected route,
+  // check if their profile onboarding is complete.
+  if (user && !isOnboardingExempt(pathname) && process.env.CORE_DATABASE_URL) {
+    try {
+      // Lightweight check: query the profile's onboarding status directly
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.CORE_DATABASE_URL);
+      const rows = await sql`SELECT onboarding_done FROM profiles WHERE id = ${user.id} LIMIT 1`;
+      const profile = rows[0];
+
+      // If profile doesn't exist yet or onboarding is not done, redirect to onboarding
+      if (!profile || !profile.onboarding_done) {
+        const onboardingUrl = new URL('/onboarding', request.url);
+        return NextResponse.redirect(onboardingUrl);
+      }
+    } catch (e) {
+      // If DB check fails, don't block the user — let them through
+      console.error('Middleware onboarding check failed:', e);
+    }
+  }
 
   return supabaseResponse;
 }

@@ -63,6 +63,10 @@ export function OnboardingWizard() {
         setError(msg);
         return;
       }
+      try {
+        const { useApiStore } = await import('@/client/store/apiStore');
+        await useApiStore.getState().loadUser();
+      } catch {}
       setStep(5);
     } catch (err: any) {
       setSaving(false);

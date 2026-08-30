@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { useApiStore } from '@/client/store/apiStore';
 
 type AuthContextType = {
   user: User | null;
@@ -38,14 +39,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+      if (session?.user) {
+        void useApiStore.getState().initializeAuth();
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          void useApiStore.getState().initializeAuth();
+        }
+      } else if (event === 'SIGNED_OUT') {
+        void useApiStore.getState().signOut();
+      }
     });
 
     return () => {
@@ -56,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    await useApiStore.getState().signOut();
     window.location.href = '/sign-in';
   };
 

@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { GitBranch, Globe, GraduationCap, Plus, Save, Trash2 } from "lucide-react";
 import { useMe, useApiStore } from "@/client/store/apiStore";
-import { useStore } from "@/client/store/useStore";
 import { CLUSTERS } from "@/client/data/seed";
 import { ROLES, ROLE_LABEL, type RoleKey } from "@/client/types";
 import { AvailabilityGrid, AvailabilityStrip, LevelPicker, roleTone } from "@/components/shared";
@@ -35,10 +35,30 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [snapshot] = useState(() => JSON.stringify(initialMe));
 
-  const patch = (p: Partial<typeof me>) => {
+  useEffect(() => {
+    if (!initialMe) {
+      void loadUser();
+    }
+  }, [initialMe, loadUser]);
+
+  useEffect(() => {
+    if (!dirty && initialMe) {
+      setMe(initialMe);
+    }
+  }, [initialMe, dirty]);
+
+  const patch = (p: Partial<typeof initialMe>) => {
     setMe((prev) => ({ ...prev, ...p }));
     setDirty(true);
   };
+
+  if (!me) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="mono-label text-fg3 animate-pulse">loading profile…</div>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     setSaving(true);

@@ -39,11 +39,20 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/sign-in?error=auth_callback_failed`);
   }
 
+  // Determine redirect destination based on onboarding status
+  let redirectPath = next;
+
   if (hasCoreDatabase()) {
     try {
-      await ensureStudentProfile(data.user);
+      const profile = await ensureStudentProfile(data.user);
+      // If onboarding is not complete, always redirect to onboarding
+      if (!profile.onboardingDone) {
+        redirectPath = '/onboarding';
+      }
     } catch (e) {
       console.error('Failed to auto-provision Neon student profile on callback:', e);
+      // If we can't check, send to onboarding to be safe
+      redirectPath = '/onboarding';
     }
   }
 
@@ -51,11 +60,11 @@ export async function GET(request: Request) {
   const isLocalEnv = process.env.NODE_ENV === 'development';
   if (isLocalEnv) {
     // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-    return NextResponse.redirect(`${origin}${next}`);
+    return NextResponse.redirect(`${origin}${redirectPath}`);
   } else if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${next}`);
+    return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`);
   } else {
-    return NextResponse.redirect(`${origin}${next}`);
+    return NextResponse.redirect(`${origin}${redirectPath}`);
   }
 }
 

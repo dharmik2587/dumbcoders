@@ -23,12 +23,14 @@ export function mapProfileToBuilder(profile: any): Builder {
     name,
     initials,
     college: profile.college?.shortName || profile.college?.name || 'Unknown',
-    year: profile.graduationYear ? (profile.graduationYear - 2026 + 1) : 1, // hacky conversion
+    year: profile.graduationYear ? (profile.graduationYear - 2026 + 1) : 1,
     branch: profile.branch || '',
     city: 'Global',
     role: (profile.rolePreference || 'frontend') as any,
     secondary: [],
-    avatarUrl: profile.avatarUrl,
+    avatar: profile.avatarUrl || undefined,
+    avatarUrl: profile.avatarUrl || undefined,
+    email: profile.email || undefined,
     goal: 'win',
     bio: profile.bio || '',
     skills: (profile.skills || []).map((s: string) => ({ id: s, label: s, cluster: 'interface', level: 2 })),
@@ -40,7 +42,8 @@ export function mapProfileToBuilder(profile: any): Builder {
     openToTeams: !!profile.isOpenToTeam,
     verified: true,
     lastActive: profile.updatedAt || new Date().toISOString(),
-  };
+    onboardingDone: !!profile.onboardingDone,
+  } as any;
 }
 
 export type ConversationWithMessages = {
@@ -96,6 +99,15 @@ type State = {
 
   // UI state
   toasts: Toast[];
+  prefs: {
+    notifyRequests: boolean;
+    notifyDeadlines: boolean;
+    notifyMatches: boolean;
+    discoverable: boolean;
+    showCollege: boolean;
+    showRepos: boolean;
+    allowRequests: boolean;
+  };
 
   // Actions
   initializeAuth: () => Promise<void>;
@@ -109,6 +121,7 @@ type State = {
   loadTeams: () => Promise<void>;
   loadBuilders: (params?: any) => Promise<void>;
   loadUser: () => Promise<void>;
+  loadRequests: () => Promise<void>;
   loadConversations: () => Promise<void>;
   loadConversationMessages: (conversationId: string) => Promise<void>;
   sendConversationMessage: (conversationId: string, content: string) => Promise<void>;
@@ -123,6 +136,13 @@ type State = {
   setRequestState: (id: string, state: CollabRequest['state']) => void;
   pushToast: (t: Omit<Toast, 'id'>) => void;
   dismissToast: (id: number) => void;
+  setPref: (k: keyof State['prefs'], v: boolean) => void;
+  readNotification: (id: string) => void;
+  readAllNotifications: () => void;
+  moveTask: (projectId: string, taskId: string, column: 'todo' | 'doing' | 'done') => void;
+  addTask: (projectId: string, title: string) => void;
+  toggleChecklist: (projectId: string, id: string) => void;
+  setNotes: (projectId: string, notes: string) => void;
 };
 
 let toastSeq = 1;
@@ -146,6 +166,15 @@ export const useApiStore = create<State>()(
       leaderboard: [],
       leaderboardLoading: false,
       toasts: [],
+      prefs: {
+        notifyRequests: true,
+        notifyDeadlines: true,
+        notifyMatches: true,
+        discoverable: true,
+        showCollege: true,
+        showRepos: true,
+        allowRequests: true,
+      },
 
       // Initialize auth on app load
       initializeAuth: async () => {
@@ -366,6 +395,15 @@ export const useApiStore = create<State>()(
           console.error('Failed to load user:', error);
         }
       },
+      
+      loadRequests: async () => {
+        try {
+          const res = await api.requestsApi.list();
+          set({ requests: res.data || [] });
+        } catch (error) {
+          console.error('Failed to load requests:', error);
+        }
+      },
 
       // Load conversations
       loadConversations: async () => {
@@ -518,6 +556,77 @@ export const useApiStore = create<State>()(
 
       dismissToast: (id) =>
         set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+        
+      setPref: (k, v) =>
+        set((s) => ({ prefs: { ...s.prefs, [k]: v } })),
+
+      readNotification: (id) =>
+        set((s) => ({
+          notifications: s.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n,
+          ),
+        })),
+
+      readAllNotifications: () =>
+        set((s) => ({
+          notifications: s.notifications.map((n) => ({ ...n, read: true })),
+        })),
+
+      moveTask: (projectId, taskId, column) =>
+        set((s) => {
+          return {
+            projects: s.projects.map((p) =>
+              p.id === projectId
+                ? {
+                    ...p,
+                    tasks: p.tasks.map((t) =>
+                      t.id === taskId ? { ...t, column } : t,
+                    ),
+                  }
+                : p,
+            ),
+          };
+        }),
+
+      addTask: (projectId, title) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? {
+                  ...p,
+                  tasks: [
+                    ...p.tasks,
+                    {
+                      id: `tk-${Date.now()}`,
+                      projectId,
+                      title,
+                      ownerId: null,
+                      column: 'todo' as const,
+                    },
+                  ],
+                }
+              : p,
+          ),
+        })),
+
+      toggleChecklist: (projectId, id) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? {
+                  ...p,
+                  checklist: p.checklist.map((c) =>
+                    c.id === id ? { ...c, done: !c.done } : c,
+                  ),
+                }
+              : p,
+          ),
+        })),
+
+      setNotes: (projectId, notes) =>
+        set((s) => ({
+          projects: s.projects.map((p) => (p.id === projectId ? { ...p, notes } : p)),
+        })),
     }),
     {
       name: 'hackmate.api.state.v1',
@@ -533,39 +642,28 @@ export const useApiStore = create<State>()(
   ),
 );
 
-const DEFAULT_BUILDER: Builder = {
-  id: 'me-guest',
-  name: 'Demo Builder',
-  handle: 'builder',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80',
-  college: 'IIT Bombay',
-  year: 2026,
-  initials: 'DB',
-  branch: 'Computer Science',
-  city: 'Mumbai',
+const EMPTY_BUILDER: Builder = {
+  id: '',
+  name: '',
+  handle: '',
+  initials: '',
+  college: '',
+  year: 1,
+  branch: '',
+  city: '',
   role: 'frontend',
-  secondary: ['backend'],
+  secondary: [],
   goal: 'learn',
-  bio: 'Fullstack builder interested in systems and web applications.',
-  skills: [
-    { id: 's1', cluster: 'frontend', label: 'React', level: 3, verified: true },
-    { id: 's2', cluster: 'backend', label: 'Node.js', level: 3, verified: true },
-    { id: 's3', cluster: 'systems', label: 'Go', level: 2, verified: false },
-  ],
-  repos: [
-    { name: 'hackmate', lang: 'TypeScript', stars: 10, url: 'https://github.com' }
-  ],
+  bio: '',
+  skills: [],
+  repos: [],
   projects: [],
   events: [],
-  availability: [
-    { day: 1, start: 18, end: 22 },
-    { day: 2, start: 18, end: 22 },
-    { day: 3, start: 18, end: 22 }
-  ],
-  weeklyHours: 12,
-  openToTeams: true,
-  verified: true,
-  lastActive: new Date().toISOString(),
+  availability: [],
+  weeklyHours: 0,
+  openToTeams: false,
+  verified: false,
+  lastActive: '',
 };
 
 export function byIdMap<T extends { id: string }>(items: T[]): Map<string, T> {
@@ -575,8 +673,7 @@ export function byIdMap<T extends { id: string }>(items: T[]): Map<string, T> {
 }
 
 export function useMe(): Builder {
-  const me = useApiStore((s) => s.me);
-  return me ?? DEFAULT_BUILDER;
+  return useApiStore((s) => s.me) ?? EMPTY_BUILDER;
 }
 
 export function useActiveTeam(): Team | undefined {

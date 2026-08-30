@@ -10,7 +10,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/client/utils/cn";
-import { useStore } from "@/client/store/useStore";
+import { useApiStore } from "@/client/store/apiStore";
 
 /* ------------------------------------------------------------------ */
 /* Scroll reveal                                                       */
@@ -656,8 +656,8 @@ export function Modal({
 /* Toaster                                                             */
 /* ------------------------------------------------------------------ */
 export function Toaster() {
-  const toasts = useStore((s) => s.toasts);
-  const dismiss = useStore((s) => s.dismissToast);
+  const toasts = useApiStore((s) => s.toasts);
+  const dismiss = useApiStore((s) => s.dismissToast);
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-[80] flex w-[min(92vw,340px)] flex-col gap-2">
       <AnimatePresence initial={false}>

@@ -172,3 +172,11 @@ export async function del<T>(
 
   return handleResponse<T>(response);
 }
+
+export const fetcher = {
+  get,
+  post,
+  put,
+  patch,
+  del,
+};

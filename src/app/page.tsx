@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Bookmark, Check, ExternalLink, Sparkles, Users } from "lucide-react";
 import { BUILDERS, CLUSTER_NAME, CLUSTER_ORDER, HACKATHONS, daysLeft } from "@/client/data/seed";
-import { byIdMap } from "@/client/store/useStore";
+import { byIdMap } from "@/client/store/apiStore";
 import { teamCoverage } from "@/client/lib/matching";
 import {
   Button,
