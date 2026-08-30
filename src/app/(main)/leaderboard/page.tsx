@@ -314,7 +314,7 @@ function Leaderboard() {
                           b={{
                             id: entry.username || entry.userId,
                             name: entry.fullName,
-                            initials: entry.fullName
+                            initials: (entry.fullName || entry.username || "?")
                               .split(" ")
                               .map((w: string) => w[0])
                               .join("")
@@ -325,7 +325,7 @@ function Leaderboard() {
                         />
                         <div className="min-w-0">
                           <Link href={`/b/${entry.username}`} className="block truncate text-[13.5px] text-fg hover:text-accent">
-                            {entry.fullName}
+                            {entry.fullName || entry.username}
                             {isMe && <span className="ml-2 text-[10px] uppercase tracking-wider text-accent">(you)</span>}
                           </Link>
                           <div className="mt-0.5 flex items-center gap-2">

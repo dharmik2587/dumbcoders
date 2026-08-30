@@ -2,7 +2,7 @@
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
-import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck, Bookmark } from "lucide-react";
 import { useStore } from "@/client/store/useStore";
 import { useApiStore } from "@/client/store/apiStore";
 import { EventStateChip, fmtDate, inr, Avatar } from "@/components/shared";
@@ -21,168 +21,7 @@ import {
 } from "@/components/ui";
 import { cn } from "@/client/utils/cn";
 
-/* ------------------------------------------------------------------ */
-/* Leaderboard                                                         */
-/* ------------------------------------------------------------------ */
-function Leaderboard() {
-  const leaderboard = useApiStore((s) => s.leaderboard);
-  const leaderboardLoading = useApiStore((s) => s.leaderboardLoading);
-  const loadLeaderboard = useApiStore((s) => s.loadLeaderboard);
-  const me = useStore((s) => s.meId);
-  const [scope, setScope] = useState<"global" | "college" | "batch">("global");
 
-  useEffect(() => {
-    loadLeaderboard({ scope });
-  }, [loadLeaderboard, scope]);
-
-  const myRank = leaderboard.findIndex((e: any) => e.userId === me) + 1;
-
-  return (
-    <div className="mx-auto max-w-[1400px]">
-      <SectionHead
-        index="05"
-        kicker="Leaderboard"
-        title={<>Signal, not noise — ranked by what you ship.</>}
-        sub="Composite score from GitHub activity, hackathon participation and placements. Scope filters by college or batch."
-        right={
-          <div className="flex items-center gap-2">
-            <Select
-              value={scope}
-              onChange={(e) => setScope(e.target.value as any)}
-              className="w-36"
-            >
-              <option value="global">Global</option>
-              <option value="college">My college</option>
-              <option value="batch">My batch</option>
-            </Select>
-          </div>
-        }
-      />
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-12">
-        {/* Stats strip */}
-        <Reveal className="lg:col-span-12">
-          <Panel ticks>
-            <div className="grid divide-x divide-line border-b border-line sm:grid-cols-4">
-              {[
-                ["Entries", leaderboard.length || "—"],
-                ["Your rank", myRank ? `#${myRank}` : "—"],
-                ["Scored", "github + events + results"],
-                ["Updated", "live"],
-              ].map(([label, value]) => (
-                <div key={label as string} className="px-5 py-4">
-                  <Label tone="muted">{label as string}</Label>
-                  <div className="mt-1.5 font-mono text-[16px] tnum text-fg">{value}</div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        </Reveal>
-
-        {/* Table */}
-        <Reveal className="lg:col-span-12">
-          <Panel>
-            <div className="divide-y divide-line">
-              {/* Header */}
-              <div className="grid grid-cols-12 gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fg3">
-                <div className="col-span-1">Rank</div>
-                <div className="col-span-5">Builder</div>
-                <div className="col-span-2 text-right">GitHub</div>
-                <div className="col-span-2 text-right">Events</div>
-                <div className="col-span-2 text-right">Composite</div>
-              </div>
-
-              {leaderboardLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-3 px-5 py-4">
-                    <div className="col-span-1"><Skeleton className="h-4 w-8" /></div>
-                    <div className="col-span-5"><Skeleton className="h-5 w-48" /></div>
-                    <div className="col-span-2"><Skeleton className="ml-auto h-4 w-16" /></div>
-                    <div className="col-span-2"><Skeleton className="ml-auto h-4 w-16" /></div>
-                    <div className="col-span-2"><Skeleton className="ml-auto h-5 w-16" /></div>
-                  </div>
-                ))
-              ) : leaderboard.length === 0 ? (
-                <div className="px-5 py-16 text-center text-[13px] text-fg3">
-                  No data yet for this scope.
-                </div>
-              ) : (
-                leaderboard.map((entry: any) => {
-                  const isMe = entry.userId === me;
-                  const top3 = entry.rank <= 3;
-                  return (
-                    <div
-                      key={entry.userId}
-                      className={cn(
-                        "grid grid-cols-12 items-center gap-3 px-5 py-3.5 transition-colors",
-                        isMe && "bg-accent-soft/50",
-                      )}
-                    >
-                      <div className="col-span-1 flex items-center gap-2">
-                        {top3 ? (
-                          <span className={cn(
-                            "flex h-7 w-7 items-center justify-center rounded-full font-mono text-[11px] font-bold tnum",
-                            entry.rank === 1 && "bg-amber text-black",
-                            entry.rank === 2 && "bg-fg3/40 text-fg",
-                            entry.rank === 3 && "bg-amber/40 text-amber",
-                          )}>
-                            {entry.rank}
-                          </span>
-                        ) : (
-                          <span className="pl-2 font-mono text-[12px] tnum text-fg3">#{entry.rank}</span>
-                        )}
-                      </div>
-                      <div className="col-span-5 flex items-center gap-3">
-                        <Avatar
-                          b={{
-                            id: entry.username || entry.userId,
-                            name: entry.fullName,
-                            initials: entry.fullName
-                              .split(" ")
-                              .map((w: string) => w[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase(),
-                          }}
-                          size={32}
-                        />
-                        <div className="min-w-0">
-                          <Link href={`/b/${entry.username}`} className="block truncate text-[13.5px] text-fg hover:text-accent">
-                            {entry.fullName}
-                            {isMe && <span className="ml-2 text-[10px] uppercase tracking-wider text-accent">(you)</span>}
-                          </Link>
-                          <div className="mt-0.5 flex items-center gap-2">
-                            <span className="font-mono text-[10px] text-fg3">@{entry.username}</span>
-                            {entry.studentCode && <span className="font-mono text-[10px] text-fg3">· {entry.studentCode}</span>}
-                            {entry.college && <span className="font-mono text-[10px] text-fg3">· {entry.college}</span>}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-span-2 text-right">
-                        <span className="font-mono text-[12.5px] tnum text-fg2">{entry.githubScore}</span>
-                      </div>
-                      <div className="col-span-2 text-right">
-                        <span className="font-mono text-[12.5px] tnum text-fg2">{(entry.participationScore || 0) + (entry.resultScore || 0)}</span>
-                      </div>
-                      <div className="col-span-2 text-right">
-                        <span className={cn(
-                          "font-mono text-[14px] font-semibold tnum",
-                          top3 ? "text-accent" : "text-fg",
-                        )}>
-                          {entry.composite}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </Panel>
-        </Reveal>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Calendar                                                            */
@@ -204,7 +43,9 @@ function Calendar() {
     const map: Record<number, typeof hackathons> = {};
     hackathons.forEach((h) => {
       if (onlySaved && !bookmarks.includes(h.id)) return;
-      const d = new Date((h as any).registerDeadline);
+      const dStr = (h as any).registrationDeadlineAt || (h as any).registerDeadline;
+      if (!dStr) return;
+      const d = new Date(dStr);
       if (d.getFullYear() !== year || d.getMonth() !== month) return;
       const k = d.getDate();
       map[k] = [...(map[k] ?? []), h];
@@ -296,21 +137,26 @@ function Calendar() {
                       <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full ring-2 ring-accent" />
                     )}
                     <span className="mt-2 flex flex-col gap-1">
-                      {events.slice(0, 3).map((e: any) => (
-                        <span
-                          key={e.id}
-                          className={cn(
-                            "flex items-center gap-1 truncate border-l-2 pl-1.5 font-mono text-[9px]",
-                            e.status === "closing"
-                              ? "border-amber text-amber"
-                              : e.status === "closed"
-                                ? "border-line-strong text-fg3"
-                                : "border-mint text-fg2",
-                          )}
-                        >
-                          {e.name}
-                        </span>
-                      ))}
+                      {events.slice(0, 3).map((e: any) => {
+                        const isBookmarked = bookmarks.includes(e.id);
+                        return (
+                          <span
+                            key={e.id}
+                            className={cn(
+                              "flex items-center gap-1 truncate border-l-2 pl-1.5 font-mono text-[9px]",
+                              isBookmarked ? "border-blue-500 text-blue-600 font-medium bg-blue-50/50" : 
+                              e.status === "closing"
+                                ? "border-amber text-amber"
+                                : e.status === "closed"
+                                  ? "border-line-strong text-fg3"
+                                  : "border-mint text-fg2",
+                            )}
+                          >
+                            {isBookmarked && <Bookmark size={8} className="text-blue-500 fill-blue-500" />}
+                            {e.name}
+                          </span>
+                        );
+                      })}
                       {events.length > 3 && (
                         <span className="font-mono text-[9px] text-fg3">
                           +{events.length - 3} more
@@ -341,14 +187,18 @@ function Calendar() {
                 <div className="divide-y divide-line">
                   {dayEvents.map((h: any) => {
                     const d = daysLeft(h);
+                    const isBookmarked = bookmarks.includes(h.id);
                     return (
                       <Link
                         key={h.id}
                         href={`/hackathons/${h.id}`}
-                        className="block px-5 py-4 transition-colors hover:bg-hover"
+                        className={cn("block px-5 py-4 transition-colors hover:bg-hover", isBookmarked && "bg-blue-50/10")}
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <span className="truncate text-[14px] text-fg">{h.name}</span>
+                          <span className="flex items-center gap-2 truncate text-[14px] text-fg">
+                            {isBookmarked && <Bookmark size={12} className="text-blue-500 fill-blue-500" />}
+                            {h.name}
+                          </span>
                           <EventStateChip h={h} />
                         </div>
                         <div className="mt-1 font-mono text-[10px] text-fg3">

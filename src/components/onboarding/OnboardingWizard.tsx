@@ -157,10 +157,10 @@ export function OnboardingWizard() {
           </p>
           <div className="mt-6">
             <a
-              href="/dashboard"
+              href="/discover"
               className="inline-block rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500 shadow-md"
             >
-              Go to Dashboard →
+              Go to Discover →
             </a>
           </div>
         </div>

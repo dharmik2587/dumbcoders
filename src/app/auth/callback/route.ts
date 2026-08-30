@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
   // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get('next') ?? '/dashboard';
+  const next = searchParams.get('next') ?? '/discover';
 
   // Supabase may redirect back with an error (e.g. user denied consent)
   if (error) {
