@@ -421,6 +421,7 @@ function CandidateRow({
             >
               {b.name}
             </Link>
+            {b.studentCode && <Chip tone="accent">{b.studentCode}</Chip>}
             <Chip tone={roleTone[b.role as RoleKey]}>{ROLE_LABEL[b.role as RoleKey]}</Chip>
             {b.verified && <Chip tone="mint">verified</Chip>}
           </div>

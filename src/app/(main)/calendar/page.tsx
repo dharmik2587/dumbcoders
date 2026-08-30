@@ -29,7 +29,7 @@ import { cn } from "@/client/utils/cn";
 function Calendar() {
   const hackathons = useApiStore((s) => s.hackathons);
   const bookmarks = useApiStore((s) => s.bookmarks);
-  const [cursor, setCursor] = useState(() => new Date("2026-03-01T00:00:00"));
+  const [cursor, setCursor] = useState(() => new Date());
   const [onlySaved, setOnlySaved] = useState(false);
   const [selected, setSelected] = useState(8); // day of month
 

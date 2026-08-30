@@ -2,6 +2,7 @@ import { get, patch, ApiResponse } from './client';
 
 export interface Builder {
   id: string;
+  studentCode?: string;
   handle: string;
   name: string;
   initials: string;

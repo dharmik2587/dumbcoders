@@ -24,18 +24,19 @@ import { CLUSTER_NAME, CLUSTER_ORDER } from "@/client/data/seed";
 import { cn } from "@/client/utils/cn";
 
 export default function Profile() {
-  const me = useMe();
-  const updateMe = useStore((s) => s.updateMe);
+  const initialMe = useMe();
+  // We use local state for the form draft, so we don't accidentally modify the mock store
+  const [me, setMe] = useState(() => initialMe);
   const pushToast = useApiStore((s) => s.pushToast);
   const updateProfileApi = useApiStore((s) => s.updateProfile);
   const loadUser = useApiStore((s) => s.loadUser);
   const t = useChartTokens();
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [snapshot] = useState(() => JSON.stringify(me));
+  const [snapshot] = useState(() => JSON.stringify(initialMe));
 
   const patch = (p: Partial<typeof me>) => {
-    updateMe(p);
+    setMe((prev) => ({ ...prev, ...p }));
     setDirty(true);
   };
 
@@ -140,6 +141,9 @@ export default function Profile() {
                 </Field>
                 <Field label="handle">
                   <Input value={me.handle} onChange={(e) => patch({ handle: e.target.value })} />
+                </Field>
+                <Field label="student code">
+                  <Input value={me.studentCode || 'Not Assigned'} disabled className="bg-hover" />
                 </Field>
                 <Field label="college">
                   <Input value={me.college} onChange={(e) => patch({ college: e.target.value })} />

@@ -39,6 +39,7 @@ export type AvailabilitySlot = { day: number; start: number; end: number };
 
 export type Builder = {
   id: string;
+  studentCode?: string;
   handle: string;
   name: string;
   initials: string;

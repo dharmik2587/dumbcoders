@@ -12,6 +12,37 @@ export type Toast = {
   undo?: () => void;
 };
 
+export function mapProfileToBuilder(profile: any): Builder {
+  if (!profile) return null as any;
+  const name = profile.fullName || profile.username || 'Anonymous';
+  const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  return {
+    id: profile.id,
+    studentCode: profile.studentCode,
+    handle: profile.username || '',
+    name,
+    initials,
+    college: profile.college?.shortName || profile.college?.name || 'Unknown',
+    year: profile.graduationYear ? (profile.graduationYear - 2026 + 1) : 1, // hacky conversion
+    branch: profile.branch || '',
+    city: 'Global',
+    role: (profile.rolePreference || 'frontend') as any,
+    secondary: [],
+    avatarUrl: profile.avatarUrl,
+    goal: 'win',
+    bio: profile.bio || '',
+    skills: (profile.skills || []).map((s: string) => ({ id: s, label: s, cluster: 'interface', level: 2 })),
+    repos: profile.github?.topRepos || [],
+    projects: [],
+    events: [],
+    availability: profile.availability ? [{ day: 6, start: 9, end: 17 }] : [],
+    weeklyHours: 10,
+    openToTeams: !!profile.isOpenToTeam,
+    verified: true,
+    lastActive: profile.updatedAt || new Date().toISOString(),
+  };
+}
+
 export type ConversationWithMessages = {
   conversationId: string;
   other: {
@@ -320,7 +351,7 @@ export const useApiStore = create<State>()(
       loadBuilders: async (params) => {
         try {
           const response = await api.searchPartners(params);
-          set({ builders: (response.data || []) as any[] });
+          set({ builders: (response.data || []).map(mapProfileToBuilder) });
         } catch (error) {
           console.error('Failed to load builders:', error);
         }
@@ -330,7 +361,7 @@ export const useApiStore = create<State>()(
       loadUser: async () => {
         try {
           const user = await api.getCurrentUser();
-          set({ me: user as any });
+          set({ me: mapProfileToBuilder(user) });
         } catch (error) {
           console.error('Failed to load user:', error);
         }

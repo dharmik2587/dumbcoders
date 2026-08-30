@@ -72,10 +72,21 @@ const LOG = [
 import { useApiStore } from "@/client/store/apiStore";
 import type { Hackathon as ApiHackathon } from "@/client/types";
 
+import { useAuth } from "@/providers/AuthProvider";
+import { useRouter } from "next/navigation";
+
 export default function Landing() {
+  const { user } = useAuth();
+  const router = useRouter();
   const hackathons = useApiStore((s) => s.hackathons);
   const loadHackathons = useApiStore((s) => s.loadHackathons);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/discover');
+    }
+  }, [user, router]);
 
   useEffect(() => {
     if (hackathons.length === 0) {
@@ -87,8 +98,8 @@ export default function Landing() {
 
   return (
     <div className="bg-canvas">
-      <LandingNav />
-      <Hero />
+      <LandingNav user={user} />
+      <Hero user={user} />
       <PlatformStrip hackathons={hackathons} />
       <Problem />
       <Matching />
@@ -107,7 +118,7 @@ function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function LandingNav() {
+function LandingNav({ user }: { user: any }) {
   const links = [
     ["Matching", "#matching"],
     ["Hackathons", "#discovery"],
@@ -139,13 +150,20 @@ function LandingNav() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          
-          <Link href="/sign-in" className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-fg3 transition-colors hover:text-fg sm:block">
-            Sign in
-          </Link>
-          <Link href="/sign-in">
-            <Button size="sm">Build profile</Button>
-          </Link>
+          {user ? (
+            <Link href="/discover">
+              <Button size="sm">Go to Discover</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/sign-in" className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-fg3 transition-colors hover:text-fg sm:block">
+                Sign in
+              </Link>
+              <Link href="/sign-in">
+                <Button size="sm">Build profile</Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
@@ -153,7 +171,7 @@ function LandingNav() {
 }
 
 /* ------------------------------------------------------------------ */
-function Hero() {
+function Hero({ user }: { user: any }) {
   return (
     <section id="top" className="relative overflow-hidden pt-16 md:pt-24">
       <div className="tech-cols pointer-events-none absolute inset-0" aria-hidden />
@@ -196,12 +214,21 @@ function Hero() {
             </Reveal>
             <Reveal delay={240}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                <Link href="/sign-in">
-                  <Button size="lg" className="group">
-                    Start your build profile
-                    <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
+                {user ? (
+                  <Link href="/discover">
+                    <Button size="lg" className="group">
+                      Go to Dashboard
+                      <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/sign-in">
+                    <Button size="lg" className="group">
+                      Start your build profile
+                      <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                )}
                 <Link href="/discover">
                   <Button size="lg" variant="outline">Browse hackathons</Button>
                 </Link>
