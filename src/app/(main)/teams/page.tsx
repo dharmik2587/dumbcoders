@@ -468,10 +468,12 @@ function TeamsIndex() {
                       openSlots: [],
                       visibility: "discoverable",
                     });
-                    pushToast({ label: "Team created", body: `${name.trim()} is now your active team.`, tone: "good" });
-                    setCreating(false);
-                    setName("");
-                    router.push(`/teams/${id}`);
+                    if (id) {
+                      pushToast({ label: "Team created", body: `${name.trim()} is now your active team.`, tone: "good" });
+                      setCreating(false);
+                      setName("");
+                      router.push(`/teams/${id}`);
+                    }
                   }}
                 >
                   Create

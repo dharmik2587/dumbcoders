@@ -427,8 +427,8 @@ function TeamsIndex() {
                 <Button
                   size="sm"
                   disabled={name.trim().length < 2}
-                  onClick={() => {
-                    const id = createTeam({
+                  onClick={async () => {
+                    const id = await createTeam({
                       name: name.trim(),
                       hackathonId: hk,
                       ownerId: me.id,
@@ -436,10 +436,12 @@ function TeamsIndex() {
                       openSlots: [],
                       visibility: "discoverable",
                     });
-                    pushToast({ label: "Team created", body: `${name.trim()} is now your active team.`, tone: "good" });
-                    setCreating(false);
-                    setName("");
-                    router.push(`/teams/${id}`);
+                    if (id) {
+                      pushToast({ label: "Team created", body: `${name.trim()} is now your active team.`, tone: "good" });
+                      setCreating(false);
+                      setName("");
+                      router.push(`/teams/${id}`);
+                    }
                   }}
                 >
                   Create
@@ -468,7 +470,7 @@ function TeamWorkspace() {
   const me = useMe();
   const byId = useMemo(() => byIdMap(builders), [builders]);
 
-  const team = teams.find((t) => t.id === id) ?? teams[0];
+  const team = teams.find((t) => t.id === id) || teams[0];
   const hack = hackathons.find((h) => h.id === team?.hackathonId);
   const project = projects.find((p) => p.id === team?.project);
   const pending = requests.filter((r) => r.teamId === team?.id && r.state === "new");
@@ -477,6 +479,18 @@ function TeamWorkspace() {
     () => (team ? teamCoverage(team, byId, hack) : null),
     [team, byId, hack],
   );
+
+  useEffect(() => {
+    loadTeams();
+  }, [loadTeams]);
+
+  if (!team || !cov) {
+    return (
+      <div className="mx-auto max-w-[1400px] p-10 flex justify-center text-fg3">
+        Loading team or team not found...
+      </div>
+    );
+  }
 
   if (!team || !cov)
     return <EmptyState title="Team not found" body="Pick a team from the index." action={<Link href="/teams"><Button variant="outline">Teams</Button></Link>} />;
