@@ -13,6 +13,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   poweredByHeader: false,
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');

@@ -61,14 +61,21 @@ export async function POST(request: NextRequest) {
   let updated = 0;
   const errors: string[] = [];
 
-  for (const item of parsed.data.hackathons) {
-    try {
-      const result = await upsertHackathonSource(item);
-      if (result.action === 'created') created += 1;
-      else updated += 1;
-    } catch (error) {
-      errors.push(`${item.source}:${item.sourceId} — ${error instanceof Error ? error.message : 'unknown error'}`);
-    }
+  const items = parsed.data.hackathons;
+  const batchSize = 5;
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map(async (item) => {
+        try {
+          const result = await upsertHackathonSource(item);
+          if (result.action === 'created') created += 1;
+          else updated += 1;
+        } catch (error) {
+          errors.push(`${item.source}:${item.sourceId} — ${error instanceof Error ? error.message : 'unknown error'}`);
+        }
+      })
+    );
   }
 
   const rejected = errors.length;

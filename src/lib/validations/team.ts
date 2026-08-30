@@ -16,6 +16,7 @@ export const updateTeamSchema = z.object({
   rolesNeeded: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
   isOpen: z.boolean().optional(),
   status: z.enum(['forming', 'complete', 'submitted', 'won', 'closed']).optional(),
+  result: z.enum(['won', 'second', 'third', 'finalist', 'participated']).nullable().optional(),
   resultNote: z.string().trim().max(1000).nullable().optional(),
   projectName: z.string().trim().max(160).nullable().optional(),
   projectUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),

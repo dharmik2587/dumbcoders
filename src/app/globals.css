@@ -3,8 +3,108 @@
 @tailwind utilities;
 
 :root {
-  --background: #f7f8fb;
-  --foreground: #162033;
+  --bg-0: #0a0d14;
+  --bg-1: #101522;
+  --bg-2: #151b2a;
+  --bg-3: #1b2333;
+  --bg-inverse: #0d121c;
+
+  --hairline: rgba(148, 163, 184, 0.14);
+  --hairline-strong: rgba(148, 163, 184, 0.3);
+
+  --fg: #ffffff;
+  --fg-2: #94a3b8;
+  --fg-3: #6b7a8f;
+
+  --accent: #4f8cff;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(79, 140, 255, 0.13);
+  --accent-line: rgba(79, 140, 255, 0.38);
+
+  --mint: #43d6c2;
+  --mint-soft: rgba(67, 214, 194, 0.13);
+  --mint-line: rgba(67, 214, 194, 0.38);
+
+  --amber: #ffb866;
+  --amber-soft: rgba(255, 184, 102, 0.13);
+  --amber-line: rgba(255, 184, 102, 0.4);
+
+  --danger: #ff7a7a;
+  --danger-soft: rgba(255, 122, 122, 0.13);
+
+  --violet: #b08cff;
+  --grid-line: rgba(148, 163, 184, 0.06);
+  --dot: rgba(148, 163, 184, 0.16);
+  --glow-a: 0.16;
+  --glow-b: 0.1;
+  --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+
+  --inv-fg: #ffffff;
+  --inv-fg-2: #94a3b8;
+  --inv-line: rgba(148, 163, 184, 0.18);
+  --inv-hover: rgba(148, 163, 184, 0.08);
+
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  color-scheme: dark;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mono-sm {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+}
+
+.tech-cols {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--grid-line) 0 1px,
+    transparent 1px calc(100% / 6)
+  );
+}
+
+.grid-bg {
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.dotfield {
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.mask-fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+}
+
+.mask-fade-b {
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+}
+
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 * {

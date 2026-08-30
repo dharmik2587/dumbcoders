@@ -17,6 +17,8 @@ export function InteractiveHackathonList({ initialHackathons }: InteractiveHacka
   const [syncMsg, setSyncMsg] = useState('');
 
   const filtered = hackathons.filter((h) => {
+    if (h.status === 'closed') return false;
+    
     const matchesSearch =
       search.trim() === '' ||
       h.title.toLowerCase().includes(search.toLowerCase()) ||

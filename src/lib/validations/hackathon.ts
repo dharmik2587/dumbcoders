@@ -50,7 +50,7 @@ export const hackathonListQuerySchema = z.object({
   theme: z.string().trim().max(60).optional(),
   status: z.string().trim().max(40).default('published'),
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(12),
+  pageSize: z.coerce.number().int().min(1).max(1000).default(200),
 });
 
 export type HackathonIngestItem = z.infer<typeof hackathonIngestItemSchema>;

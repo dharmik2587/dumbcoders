@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       skill: params.get('skill') ?? undefined,
       collegeId: params.get('collegeId') ?? undefined,
       role: params.get('role') ?? undefined,
+      teamId: params.get('teamId') ?? undefined,
       page,
       pageSize,
     });

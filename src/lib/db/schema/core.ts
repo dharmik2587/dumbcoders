@@ -44,6 +44,8 @@ export const profiles = pgTable(
     availability: text('availability'),
     portfolioUrl: text('portfolio_url'),
     linkedinUrl: text('linkedin_url'),
+    githubUsername: text('github_username'),
+    leetcodeUsername: text('leetcode_username'),
     onboardingDone: boolean('onboarding_done').notNull().default(false),
     profileComplete: integer('profile_complete').notNull().default(0),
     isOpenToTeam: boolean('is_open_to_team').notNull().default(true),
@@ -81,6 +83,29 @@ export const githubData = pgTable(
   (table) => ({
     userUnique: uniqueIndex('github_data_user_unique_idx').on(table.userId),
     usernameIdx: index('github_data_username_idx').on(table.username),
+  }),
+);
+
+export const leetcodeData = pgTable(
+  'leetcode_data',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    username: text('username').notNull(),
+    totalSolved: integer('total_solved').notNull().default(0),
+    easySolved: integer('easy_solved').notNull().default(0),
+    mediumSolved: integer('medium_solved').notNull().default(0),
+    hardSolved: integer('hard_solved').notNull().default(0),
+    ranking: integer('ranking'),
+    contestRating: integer('contest_rating'),
+    contestsAttended: integer('contests_attended').notNull().default(0),
+    syncedAt: timestamp('synced_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userUnique: uniqueIndex('leetcode_data_user_unique_idx').on(table.userId),
+    usernameIdx: index('leetcode_data_username_idx').on(table.username),
   }),
 );
 
@@ -233,6 +258,7 @@ export const teams = pgTable(
     rolesNeeded: text('roles_needed').array().notNull().default([]),
     isOpen: boolean('is_open').notNull().default(true),
     status: text('status').notNull().default('forming'),
+    result: text('result'),
     resultNote: text('result_note'),
     projectName: text('project_name'),
     projectUrl: text('project_url'),
@@ -349,10 +375,54 @@ export const teamMessages = pgTable(
   }),
 );
 
+export const conversations = pgTable(
+  'conversations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userAId: text('user_a_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    userBId: text('user_b_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    pairUnique: uniqueIndex('conversations_pair_unique_idx').on(table.userAId, table.userBId),
+    userAIdx: index('conversations_user_a_idx').on(table.userAId),
+    userBIdx: index('conversations_user_b_idx').on(table.userBId),
+  }),
+);
+
+export const directMessages = pgTable(
+  'direct_messages',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+    senderId: text('sender_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    conversationCreatedIdx: index('direct_messages_conversation_created_idx').on(
+      table.conversationId,
+      table.createdAt,
+    ),
+    senderIdx: index('direct_messages_sender_idx').on(table.senderId),
+  }),
+);
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type College = typeof colleges.$inferSelect;
 export type GithubData = typeof githubData.$inferSelect;
+export type LeetcodeData = typeof leetcodeData.$inferSelect;
 export type Hackathon = typeof hackathons.$inferSelect;
 export type HackathonSource = typeof hackathonSources.$inferSelect;
 export type Team = typeof teams.$inferSelect;
@@ -360,3 +430,5 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type TeamRequest = typeof teamRequests.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type TeamMessage = typeof teamMessages.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type DirectMessage = typeof directMessages.$inferSelect;

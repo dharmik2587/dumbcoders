@@ -1,9 +1,0 @@
-'use client';
-
-import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-
-export default function BookmarksPage() {
-  const query = useQuery({ queryKey: ['bookmarks'], queryFn: async () => { const response = await fetch('/api/hackathons/bookmarked'); const body = await response.json(); if (!response.ok) throw new Error(body.error?.message ?? 'Could not load bookmarks'); return body.data as Array<{ hackathon: { id: string; title: string; organizer: string | null; registrationDeadlineAt: string | null; prizeDisplay: string | null } }>; } });
-  return <div className="mx-auto max-w-5xl px-6 py-12"><p className="text-sm font-semibold uppercase tracking-wider text-blue-600">Saved events</p><h1 className="mt-2 text-4xl font-bold">Bookmarks</h1>{query.isLoading && <p className="mt-8 text-slate-500">Loading bookmarks…</p>}{query.error && <div className="mt-8 rounded-xl bg-amber-50 p-5 text-amber-800">{query.error.message}</div>}<div className="mt-8 grid gap-4 md:grid-cols-2">{query.data?.length ? query.data.map(({ hackathon }) => <Link href={`/hackathons/${hackathon.id}`} key={hackathon.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md"><p className="text-sm text-slate-500">{hackathon.organizer ?? 'Hackathon'}</p><h2 className="mt-2 text-xl font-bold">{hackathon.title}</h2><div className="mt-5 flex justify-between text-sm"><span className="font-semibold text-emerald-700">{hackathon.prizeDisplay ?? 'Prizes vary'}</span><span className="text-slate-500">{hackathon.registrationDeadlineAt ? new Date(hackathon.registrationDeadlineAt).toLocaleDateString() : 'Deadline TBD'}</span></div></Link>) : !query.isLoading && <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">No bookmarks yet.</div>}</div></div>;
-}

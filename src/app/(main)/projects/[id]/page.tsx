@@ -1,0 +1,442 @@
+"use client";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+
+import { motion } from "framer-motion";
+import { GripVertical, Plus } from "lucide-react";
+import { useStore } from "@/client/store/useStore";
+import { useApiStore, byIdMap } from "@/client/store/apiStore";
+import { Avatar, relTime } from "@/components/shared";
+import {
+  Button,
+  Chip,
+  CornerTicks,
+  EmptyState,
+  Label,
+  Meter,
+  Panel,
+  Reveal,
+  StateDot,
+  Textarea,
+} from "@/components/ui";
+import { ThemedLine, useChartTokens } from "@/components/charts";
+import { cn } from "@/client/utils/cn";
+import type { Task } from "@/client/types";
+
+const COLUMNS = [
+  { id: "todo", label: "Todo", tone: "text-fg3" },
+  { id: "doing", label: "In progress", tone: "text-amber" },
+  { id: "done", label: "Done", tone: "text-mint" },
+] as const;
+
+type Col = (typeof COLUMNS)[number]["id"];
+
+export default function ProjectWorkspace() {
+  const { id } = useParams();
+  const projects = useStore((s) => s.projects);
+  const teams = useApiStore((s) => s.teams);
+  const builders = useApiStore((s) => s.builders);
+  const hackathons = useApiStore((s) => s.hackathons);
+  const moveTask = useStore((s) => s.moveTask);
+  const addTask = useStore((s) => s.addTask);
+  const toggleChecklist = useStore((s) => s.toggleChecklist);
+  const setNotes = useStore((s) => s.setNotes);
+  const pushToast = useApiStore((s) => s.pushToast);
+  const byId = useMemo(() => byIdMap(builders), [builders]);
+  const t = useChartTokens();
+
+  const [draft, setDraft] = useState<Record<Col, string>>({ todo: "", doing: "", done: "" });
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<Col | null>(null);
+
+  const project = projects.find((p) => p.id === id);
+  if (!project)
+    return (
+      <EmptyState
+        title="Project not found"
+        body="Open a team workspace to reach its project."
+        action={<Link href="/teams"><Button variant="outline">Teams</Button></Link>}
+      />
+    );
+
+  const team = teams.find((x) => x.id === project.teamId);
+  const hack = hackathons.find((h) => h.id === project.hackathonId);
+  const doneCount = project.checklist.filter((c) => c.done).length;
+  const ms = new Date(project.submissionAt).getTime() - Date.now();
+  const hours = Math.max(0, Math.floor(ms / 3_600_000));
+  const openTasks = project.tasks.filter((x) => x.column !== "done").length;
+  const ownerGaps = project.tasks.filter((x) => !x.ownerId && x.column !== "done").length;
+
+  const drop = (col: Col) => {
+    if (!dragging) return;
+    moveTask(project.id, dragging, col);
+    setDragging(null);
+    setOver(null);
+  };
+
+  return (
+    <div className="mx-auto max-w-[1400px]">
+      <Reveal>
+        <div className="flex flex-wrap items-end justify-between gap-5 border-b border-line pb-6">
+          <div>
+            <Label tone="accent">
+              <span className="text-fg3">project</span> / {project.name}
+            </Label>
+            <h1 className="display mt-3 text-[clamp(1.8rem,3.8vw,2.9rem)] font-medium leading-tight text-fg">
+              {project.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-fg3">
+              <span>{team?.name}</span>
+              <span>·</span>
+              <span>{hack?.name}</span>
+              <span>·</span>
+              <span>submission T-{hours}h</span>
+            </div>
+          </div>
+          {team && (
+            <div className="flex -space-x-2">
+              {team.members.map((m) => {
+                const b = byId.get(m.builderId);
+                return b ? <Avatar key={m.builderId} b={b} size={30} /> : null;
+              })}
+            </div>
+          )}
+        </div>
+      </Reveal>
+
+      {/* stat strip */}
+      <Reveal delay={60}>
+        <div className="mt-6 grid grid-cols-2 gap-px border border-line bg-line md:grid-cols-4">
+          {[
+            ["commits", project.commitCount],
+            ["open tasks", openTasks],
+            ["owner gaps", ownerGaps],
+            ["checklist", `${doneCount}/${project.checklist.length}`],
+          ].map(([k, v], i) => (
+            <div key={k as string} className="bg-surface px-5 py-4">
+              <div className="mono-label text-fg3">{k}</div>
+              <div
+                className={cn(
+                  "mt-1.5 font-mono text-[24px] tnum",
+                  k === "owner gaps" && Number(v) > 0 ? "text-amber" : "text-fg",
+                )}
+              >
+                {v}
+              </div>
+              {i === 3 && (
+                <div className="mt-2">
+                  <Meter value={(doneCount / project.checklist.length) * 100} tone={doneCount === project.checklist.length ? "mint" : "amber"} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <div className="grid gap-6 py-8 lg:grid-cols-12">
+        {/* board */}
+        <div className="lg:col-span-8">
+          <Reveal>
+            <div className="mb-3 flex items-center justify-between">
+              <Label tone="accent">task board</Label>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fg3">
+                drag to move · ⌘+arrow also works
+              </span>
+            </div>
+          </Reveal>
+          <div className="grid gap-3 md:grid-cols-3">
+            {COLUMNS.map((col) => {
+              const items = project.tasks.filter((x) => x.column === col.id);
+              return (
+                <div
+                  key={col.id}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setOver(col.id);
+                  }}
+                  onDragLeave={() => setOver((o) => (o === col.id ? null : o))}
+                  onDrop={() => drop(col.id)}
+                  className={cn(
+                    "flex min-h-[240px] flex-col border bg-surface transition-colors",
+                    over === col.id ? "border-accent-line bg-accent-soft/40" : "border-line",
+                  )}
+                >
+                  <div className="flex items-center justify-between border-b border-line px-3.5 py-2.5">
+                    <span className={cn("mono-label", col.tone)}>{col.label}</span>
+                    <span className="font-mono text-[10px] tnum text-fg3">{items.length}</span>
+                  </div>
+
+                  <div className="flex-1 space-y-2 p-2.5">
+                    {items.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        dragging={dragging === task.id}
+                        onDragStart={() => setDragging(task.id)}
+                        onDragEnd={() => {
+                          setDragging(null);
+                          setOver(null);
+                        }}
+                        ownerName={
+                          task.ownerId
+                            ? byId.get(task.ownerId)?.name.split(" ")[0] ?? null
+                            : null
+                        }
+                        onKeyMove={(dir) => {
+                          const i = COLUMNS.findIndex((c) => c.id === task.column);
+                          const next = COLUMNS[Math.min(COLUMNS.length - 1, Math.max(0, i + dir))];
+                          if (next) {
+                            moveTask(project.id, task.id, next.id);
+                            pushToast({ label: "Task moved", body: `${task.title} → ${next.label}`, tone: "info" });
+                          }
+                        }}
+                      />
+                    ))}
+                    {items.length === 0 && (
+                      <p className="px-2 py-6 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-fg3">
+                        drop here
+                      </p>
+                    )}
+                  </div>
+
+                  <form
+                    className="border-t border-line p-2.5"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const v = draft[col.id].trim();
+                      if (!v) return;
+                      addTask(project.id, v);
+                      setDraft((d) => ({ ...d, [col.id]: "" }));
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Plus size={12} className="shrink-0 text-fg3" />
+                      <input
+                        value={draft[col.id]}
+                        onChange={(e) => setDraft((d) => ({ ...d, [col.id]: e.target.value }))}
+                        placeholder="Add task"
+                        aria-label={`Add task to ${col.label}`}
+                        className="w-full bg-transparent font-mono text-[11px] text-fg placeholder:text-fg3 focus:outline-none"
+                      />
+                    </div>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
+
+          <Reveal delay={80}>
+            <Panel className="mt-6">
+              <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                <Label tone="accent">commit activity</Label>
+                <span className="font-mono text-[10px] tnum text-fg3">
+                  {project.commitCount} total
+                </span>
+              </div>
+              <div className="px-4 py-4">
+                <ThemedLine
+                  height={170}
+                  data={{
+                    labels: ["D-6", "D-5", "D-4", "D-3", "D-2", "D-1", "today"],
+                    datasets: [
+                      {
+                        data: project.commitsByDay,
+                        borderColor: t.accent,
+                        backgroundColor: `${t.accent}22`,
+                        fill: true,
+                        tension: 0.32,
+                        borderWidth: 1.6,
+                        pointRadius: 2.5,
+                        pointBackgroundColor: t.accent,
+                      },
+                    ],
+                  }}
+                />
+              </div>
+            </Panel>
+          </Reveal>
+        </div>
+
+        {/* right column */}
+        <div className="space-y-6 lg:col-span-4">
+          <Reveal delay={60}>
+            <Panel ticks>
+              <CornerTicks />
+              <div className="border-b border-line px-5 py-3">
+                <Label tone="accent">build log</Label>
+              </div>
+              <div className="relative px-5 py-5">
+                <span className="absolute bottom-5 left-[25px] top-5 w-px bg-line" />
+                {project.log.map((l) => (
+                  <div key={l.id} className="relative flex gap-4 pb-5 last:pb-0">
+                    <span
+                      className={cn(
+                        "relative z-10 mt-1 h-[11px] w-[11px] shrink-0 rounded-full border",
+                        l.state === "done" && "border-mint-line bg-mint",
+                        l.state === "active" && "border-accent bg-accent/30",
+                        l.state === "todo" && "border-line-strong bg-surface",
+                      )}
+                    >
+                      {l.state === "active" && (
+                        <span className="absolute inset-0 animate-pulse-dot rounded-full bg-accent/60" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-baseline gap-x-3">
+                        <span className="font-mono text-[10px] tnum text-fg3">{l.at}</span>
+                        <span className={cn("text-[12.5px]", l.state === "todo" ? "text-fg3" : "text-fg")}>
+                          {l.label}
+                        </span>
+                      </div>
+                      {l.progress !== undefined && (
+                        <div className="mt-2 max-w-[200px]">
+                          <Meter value={l.progress} tone="accent" />
+                          <span className="mt-1 block font-mono text-[9px] tnum text-fg3">
+                            {l.progress}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <Panel>
+              <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                <Label tone="accent">submission checklist</Label>
+                <span className="font-mono text-[10px] tnum text-fg3">
+                  {doneCount} of {project.checklist.length}
+                </span>
+              </div>
+              <div className="space-y-2.5 px-5 py-4">
+                {project.checklist.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      toggleChecklist(project.id, c.id);
+                      pushToast({
+                        label: c.done ? "Item reopened" : "Item cleared",
+                        body: c.label,
+                        tone: c.done ? "info" : "good",
+                      });
+                    }}
+                    className="group flex w-full items-center justify-between gap-4 text-left"
+                  >
+                    <span
+                      className={cn(
+                        "text-[12.5px] transition-colors",
+                        c.done ? "text-fg3 line-through" : "text-fg",
+                      )}
+                    >
+                      {c.label}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <StateDot tone={c.done ? "mint" : "amber"} />
+                      <span className={cn("font-mono text-[10px] uppercase tracking-[0.12em]", c.done ? "text-mint" : "text-amber")}>
+                        {c.done ? "done" : "pending"}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Panel>
+          </Reveal>
+
+          <Reveal delay={140}>
+            <Panel>
+              <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                <Label tone="accent">shared notes</Label>
+                <span className="font-mono text-[10px] text-fg3">saved locally</span>
+              </div>
+              <div className="p-4">
+                <Textarea
+                  rows={6}
+                  value={project.notes}
+                  onChange={(e) => setNotes(project.id, e.target.value)}
+                  placeholder="Scope decisions, cut features, judging angle…"
+                  className="bg-raised text-[12.5px] leading-relaxed"
+                />
+                <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.14em] text-fg3">
+                  {project.notes.length} chars · edited {relTime(new Date().toISOString())}
+                </p>
+              </div>
+            </Panel>
+          </Reveal>
+
+          <Reveal delay={170}>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip tone="accent">{hack?.track}</Chip>
+              <Chip>{hack?.mode} · {hack?.durationHours}h</Chip>
+              <Chip tone={ownerGaps > 0 ? "amber" : "mint"}>
+                {ownerGaps > 0 ? `${ownerGaps} unowned` : "all owned"}
+              </Chip>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({
+  task,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  ownerName,
+  onKeyMove,
+}: {
+  task: Task;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  ownerName: string | null;
+  onKeyMove: (dir: -1 | 1) => void;
+}) {
+  return (
+    <motion.div
+      layout
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "ArrowRight") {
+          e.preventDefault();
+          onKeyMove(1);
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === "ArrowLeft") {
+          e.preventDefault();
+          onKeyMove(-1);
+        }
+      }}
+      className={cn(
+        "group cursor-grab border border-line bg-raised p-3 transition-all duration-200 hover:border-line-strong active:cursor-grabbing",
+        dragging && "opacity-40",
+        !ownerName && task.column !== "done" && "border-l-2 border-l-amber",
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <GripVertical size={12} className="mt-0.5 shrink-0 text-fg3 opacity-0 transition-opacity group-hover:opacity-100" />
+        <p className={cn("text-[12.5px] leading-snug", task.column === "done" ? "text-fg3 line-through" : "text-fg")}>
+          {task.title}
+        </p>
+      </div>
+      <div className="mt-2 flex items-center justify-between">
+        <span
+          className={cn(
+            "font-mono text-[9px] uppercase tracking-[0.12em]",
+            ownerName ? "text-fg3" : "text-amber",
+          )}
+        >
+          {ownerName ?? "unowned"}
+        </span>
+        <span className="font-mono text-[9px] tnum text-fg3">{task.id}</span>
+      </div>
+    </motion.div>
+  );
+}

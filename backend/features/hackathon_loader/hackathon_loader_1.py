@@ -307,30 +307,46 @@ def sync_to_database(hackathons: List[Dict[str, Any]], app_url: str = APP_URL, s
         return {"inserted": 0, "updated": 0, "rejected": 0}
 
     endpoint = f"{app_url.rstrip('/')}/api/internal/ingest/hackathons"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {secret}",
-        "x-ingestion-run-id": f"unstop-loader-{int(time.time())}",
-    }
+    total_inserted = 0
+    total_updated = 0
+    total_rejected = 0
 
-    payload = {
-        "source": "unstop",
-        "hackathons": hackathons[:100],  # sync top 50-100
-    }
+    chunk_size = 25
+    total_to_sync = hackathons[:100]
 
-    logger.info(f"Syncing {len(payload['hackathons'])} hackathons to {endpoint}...")
-    try:
-        res = requests.post(endpoint, json=payload, headers=headers, timeout=120)
-        if res.status_code == 200:
-            result = res.json()
-            logger.info(f"Sync successful! Inserted: {result.get('data', {}).get('inserted')}, Updated: {result.get('data', {}).get('updated')}")
-            return result
-        else:
-            logger.error(f"Ingest API failed with status {res.status_code}: {res.text}")
-            return {"error": res.text, "status_code": res.status_code}
-    except Exception as e:
-        logger.error(f"Failed to connect to HackMate ingest endpoint: {e}")
-        return {"error": str(e)}
+    logger.info(f"Syncing {len(total_to_sync)} hackathons in chunks of {chunk_size} to {endpoint}...")
+
+    for i in range(0, len(total_to_sync), chunk_size):
+        chunk = total_to_sync[i:i + chunk_size]
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {secret}",
+            "x-ingestion-run-id": f"unstop-loader-{int(time.time())}-{i}",
+        }
+        payload = {
+            "source": "unstop",
+            "hackathons": chunk,
+        }
+
+        try:
+            res = requests.post(endpoint, json=payload, headers=headers, timeout=120)
+            if res.status_code == 200:
+                result = res.json()
+                data = result.get("data", {})
+                ins = data.get("inserted", 0)
+                upd = data.get("updated", 0)
+                rej = data.get("rejected", 0)
+                total_inserted += ins
+                total_updated += upd
+                total_rejected += rej
+                logger.info(f"Chunk {i // chunk_size + 1}: Inserted {ins}, Updated {upd}, Rejected {rej}")
+            else:
+                logger.error(f"Ingest API failed on chunk {i // chunk_size + 1} with status {res.status_code}: {res.text}")
+        except Exception as e:
+            logger.error(f"Failed to sync chunk {i // chunk_size + 1}: {e}")
+
+    logger.info(f"Sync complete! Total Inserted: {total_inserted}, Total Updated: {total_updated}, Total Rejected: {total_rejected}")
+    return {"inserted": total_inserted, "updated": total_updated, "rejected": total_rejected}
 
 
 def run_hackathon_loader_job():

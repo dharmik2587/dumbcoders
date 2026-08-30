@@ -1,0 +1,25 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { hasCoreDatabase } from '@/lib/db/core';
+import { getHackathonById } from '@/lib/db/queries/hackathons';
+import { failure } from '@/lib/http';
+
+export const runtime = 'nodejs';
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  if (!hasCoreDatabase()) return failure('NOT_CONFIGURED', 'Database is not configured.', 503);
+  const { id } = await params;
+
+  try {
+    const hackathon = await getHackathonById(id);
+    if (!hackathon) return failure('NOT_FOUND', 'Hackathon not found.', 404);
+    if (!hackathon.registrationUrl) return failure('NOT_FOUND', 'No registration URL available for this hackathon.', 404);
+
+    return NextResponse.redirect(hackathon.registrationUrl, 302);
+  } catch (error) {
+    console.error('GET /api/hackathons/[id]/register failed', error);
+    return failure('SERVER_ERROR', 'Could not process registration redirect.', 500);
+  }
+}

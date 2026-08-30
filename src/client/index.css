@@ -1,0 +1,271 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   RAW TOKENS — dark mode only
+===================================================================== */
+:root {
+  --bg-0: #0a0d14;
+  --bg-1: #101522;
+  --bg-2: #151b2a;
+  --bg-3: #1b2333;
+  --bg-inverse: #0d121c;
+
+  --hairline: rgba(148, 163, 184, 0.14);
+  --hairline-strong: rgba(148, 163, 184, 0.3);
+
+  --fg: #ffffff;
+  --fg-2: #94a3b8;
+  --fg-3: #6b7a8f;
+
+  --accent: #4f8cff;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(79, 140, 255, 0.13);
+  --accent-line: rgba(79, 140, 255, 0.38);
+
+  --mint: #43d6c2;
+  --mint-soft: rgba(67, 214, 194, 0.13);
+  --mint-line: rgba(67, 214, 194, 0.38);
+
+  --amber: #ffb866;
+  --amber-soft: rgba(255, 184, 102, 0.13);
+  --amber-line: rgba(255, 184, 102, 0.4);
+
+  --danger: #ff7a7a;
+  --danger-soft: rgba(255, 122, 122, 0.13);
+
+  --violet: #b08cff;
+  --grid-line: rgba(148, 163, 184, 0.06);
+  --dot: rgba(148, 163, 184, 0.16);
+  --glow-a: 0.16;
+  --glow-b: 0.1;
+  --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+
+  /* Inverse tokens point to same dark palette */
+  --inv-fg: #ffffff;
+  --inv-fg-2: #94a3b8;
+  --inv-line: rgba(148, 163, 184, 0.18);
+  --inv-hover: rgba(148, 163, 184, 0.08);
+
+  color-scheme: dark;
+}
+
+/* =====================================================================
+   TAILWIND THEME — semantic tokens only, components never use hex
+===================================================================== */
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-canvas: var(--bg-0);
+  --color-surface: var(--bg-1);
+  --color-raised: var(--bg-2);
+  --color-hover: var(--bg-3);
+  --color-inverse: var(--bg-inverse);
+
+  --color-line: var(--hairline);
+  --color-line-strong: var(--hairline-strong);
+
+  --color-fg: var(--fg);
+  --color-fg2: var(--fg-2);
+  --color-fg3: var(--fg-3);
+
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-mint-line: var(--mint-line);
+
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-line: var(--amber-line);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-violet: var(--violet);
+
+  --color-invfg: var(--inv-fg);
+  --color-invfg2: var(--inv-fg-2);
+  --color-invline: var(--inv-line);
+  --color-invhover: var(--inv-hover);
+
+  --animate-marquee: marquee 42s linear infinite;
+  --animate-marquee-slow: marquee 95s linear infinite;
+  --animate-pulse-dot: pulse-dot 2.4s ease-in-out infinite;
+  --animate-sweep: sweep 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-blip: blip 3s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(1200%); opacity: 0; }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes blip {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* =====================================================================
+   BASE
+===================================================================== */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-0);
+  color: var(--fg);
+  overflow-x: hidden;
+  font-feature-settings: "ss01", "cv01";
+}
+
+section[id] { scroll-margin-top: 64px; }
+
+::selection { background: var(--accent); color: #fff; }
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--fg-3); }
+
+input, textarea, select, button { font: inherit; color: inherit; }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(var(--cal-invert, 0));
+}
+:root { --cal-invert: 1; }
+
+/* =====================================================================
+   UTILITIES
+===================================================================== */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility mono-sm {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+@utility display {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+}
+
+@utility tech-cols {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--grid-line) 0 1px,
+    transparent 1px calc(100% / 6)
+  );
+}
+
+@utility grid-bg {
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+@utility dotfield {
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@utility mask-fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+}
+
+@utility mask-fade-b {
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+}
+
+@utility scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* =====================================================================
+   SCROLL REVEALS
+===================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--d, 0ms);
+  will-change: opacity, transform;
+}
+.reveal[data-visible="true"] { opacity: 1; transform: none; filter: blur(0); }
+
+.reveal-clip {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--d, 0ms);
+}
+.reveal-clip[data-visible="true"] { clip-path: inset(0 0% 0 0); }
+
+/* Theme crossfade removed — dark mode only */
+
+/* =====================================================================
+   REDUCED MOTION
+===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal, .reveal-clip {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+  }
+}

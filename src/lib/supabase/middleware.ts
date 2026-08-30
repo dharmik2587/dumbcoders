@@ -44,21 +44,11 @@ export async function updateSession(request: NextRequest) {
     '/sign-in',
     '/sign-up',
     '/auth/callback',
+    '/hackathons',
+    '/find-partners',
     '/profile',
     '/api',
   ];
-
-  const pathname = request.nextUrl.pathname;
-  const isPublic = publicPrefixes.some(
-    (prefix) => pathname === prefix || (prefix !== '/' && pathname.startsWith(`${prefix}/`))
-  );
-
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/sign-in';
-    url.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(url);
-  }
 
   return supabaseResponse;
 }

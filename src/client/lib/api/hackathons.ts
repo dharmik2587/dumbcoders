@@ -1,0 +1,133 @@
+import { get, post, ApiResponse } from './client';
+import type { Hackathon } from '../../types';
+
+export interface HackathonListResponse {
+  data: Hackathon[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
+function normalizeHackathon(raw: any, index: number = 0): Hackathon {
+  // If already in frontend format
+  if (raw.name && raw.registerDeadline) {
+    return raw as Hackathon;
+  }
+
+  const title = raw.title || raw.name || 'Hackathon';
+  const organizer = raw.organizer || raw.host || 'Unstop';
+  const location = raw.location || raw.city || 'Online';
+  const themes = Array.isArray(raw.themes) && raw.themes.length > 0 ? raw.themes : ['AI / ML', 'Web'];
+  const primaryTrack = themes[0] || 'Open';
+  const rawMode = String(raw.mode || 'online').toLowerCase();
+  const mode: Hackathon['mode'] = rawMode.includes('hybrid')
+    ? 'hybrid'
+    : rawMode.includes('person') || rawMode.includes('offline') || rawMode.includes('onsite')
+    ? 'onsite'
+    : 'remote';
+
+  const prizeNum = Number(raw.prizeAmount || raw.prize) || 100000;
+  const deadlineStr = raw.registrationDeadlineAt || raw.registerDeadline || new Date(Date.now() + 14 * 86400000).toISOString();
+  const startStr = raw.startAt || raw.startDate || new Date(Date.now() + 18 * 86400000).toISOString();
+
+  const deadlineDate = new Date(deadlineStr);
+  const now = new Date();
+  const daysDiff = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const status: Hackathon['status'] = daysDiff < 0 ? 'closed' : daysDiff <= 7 ? 'closing' : 'open';
+
+  return {
+    id: raw.id || `hk-${1000 + index}`,
+    code: raw.canonicalKey || `HK-${raw.id?.slice(0, 6).toUpperCase() || 2000 + index}`,
+    name: title,
+    host: organizer,
+    city: location,
+    mode,
+    durationHours: 36,
+    startDate: startStr,
+    registerDeadline: deadlineStr,
+    track: primaryTrack,
+    tracks: themes,
+    prize: prizeNum,
+    currency: 'INR',
+    maxTeamSize: Number(raw.teamSizeMax) || 4,
+    minTeamSize: Number(raw.teamSizeMin) || 1,
+    demand: daysDiff <= 10 ? 'high' : daysDiff <= 25 ? 'medium' : 'low',
+    trackDemands: { ml: 0.85, backend: 0.8, frontend: 0.75 },
+    description: raw.description || `${primaryTrack} Hackathon organized by ${organizer}. Showcase your skills, build prototypes, and compete for prizes.`,
+    status,
+    registrationUrl: raw.registrationUrl || raw.registration_url || undefined,
+  };
+}
+
+export async function listHackathons(params?: {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  mode?: string;
+  track?: string;
+  closing?: string;
+  size?: string;
+  seeking?: boolean;
+}): Promise<HackathonListResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set('page', params.page.toString());
+  if (params?.pageSize) searchParams.set('pageSize', params.pageSize.toString());
+  if (params?.q) searchParams.set('q', params.q);
+  if (params?.mode && params.mode !== 'all') searchParams.set('mode', params.mode);
+  if (params?.track && params.track !== 'all') searchParams.set('theme', params.track);
+
+  const query = searchParams.toString();
+  const endpoint = `/api/hackathons${query ? `?${query}` : ''}`;
+
+  try {
+    const res = await get<any>(endpoint);
+    const innerData = res?.data;
+    const rawList = Array.isArray(innerData?.data)
+      ? innerData.data
+      : Array.isArray(innerData)
+        ? innerData
+        : Array.isArray(res)
+          ? res
+          : [];
+    const normalized = rawList.map((item: any, i: number) => normalizeHackathon(item, i));
+    const meta = innerData?.meta || res?.meta || {};
+    return {
+      data: normalized,
+      meta: {
+        page: meta.page ?? 1,
+        pageSize: meta.pageSize ?? normalized.length,
+        total: meta.total ?? normalized.length,
+        hasMore: meta.hasMore ?? false,
+      },
+    };
+  } catch (error) {
+    console.error('Failed to fetch hackathons from API:', error);
+    return { data: [], meta: { page: 1, pageSize: 0, total: 0, hasMore: false } };
+  }
+}
+
+export async function getHackathon(id: string): Promise<Hackathon> {
+  const res = await get<any>(`/api/hackathons/${id}`);
+  const raw = res?.data?.data || res?.data?.hackathon || res?.data || res;
+  return normalizeHackathon(raw);
+}
+
+export async function bookmarkHackathon(id: string): Promise<void> {
+  return post(`/api/hackathons/${id}/bookmark`);
+}
+
+export async function interestHackathon(id: string): Promise<void> {
+  return post(`/api/hackathons/${id}/interest`);
+}
+
+export async function getBookmarkedHackathons(): Promise<Hackathon[]> {
+  const res = await get<ApiResponse<any[]>>('/api/hackathons/bookmarked');
+  return (res.data || []).map((item, i) => normalizeHackathon(item, i));
+}
+
+export async function refreshHackathons(): Promise<void> {
+  await get('/api/cron/ingest');
+}
