@@ -27,7 +27,7 @@ function MessagesContent() {
       setLoading(false);
       const startId = searchParams?.get("start");
       if (startId) {
-        const existing = useApiStore.getState().conversations.find((c) => c.other.id === startId);
+        const existing = useApiStore.getState().conversations.find((c) => c.other?.id === startId);
         if (existing) {
           setActiveId(existing.conversationId);
         } else {
@@ -78,11 +78,11 @@ function MessagesContent() {
                     activeId === c.conversationId && "bg-accent-soft"
                   )}
                 >
-                  <Avatar b={{ initials: c.other.fullName?.substring(0,2).toUpperCase(), avatarUrl: c.other.avatarUrl } as any} size={40} link={false} />
+                  <Avatar b={{ initials: c.other?.fullName?.substring(0,2)?.toUpperCase() || 'UN', avatarUrl: c.other?.avatarUrl } as any} size={40} link={false} />
                   <div className="flex-1 min-w-0">
-                    <div className="truncate font-semibold text-fg">{c.other.fullName}</div>
+                    <div className="truncate font-semibold text-fg">{c.other?.fullName || 'Unknown User'}</div>
                     <div className="truncate text-xs text-fg3">
-                      {c.other.studentCode || c.other.username}
+                      {c.other?.studentCode || c.other?.username || 'Unknown'}
                     </div>
                   </div>
                 </button>
@@ -97,10 +97,10 @@ function MessagesContent() {
             <>
               {/* Chat Header */}
               <div className="flex h-16 items-center gap-3 border-b border-line px-5 shrink-0 bg-surface">
-                <Avatar b={{ initials: active.other.fullName?.substring(0,2).toUpperCase(), avatarUrl: active.other.avatarUrl } as any} size={32} link={false} />
+                <Avatar b={{ initials: active.other?.fullName?.substring(0,2)?.toUpperCase() || 'UN', avatarUrl: active.other?.avatarUrl } as any} size={32} link={false} />
                 <div>
-                  <div className="font-semibold text-fg">{active.other.fullName}</div>
-                  <div className="text-xs text-fg3">{active.other.studentCode || active.other.username}</div>
+                  <div className="font-semibold text-fg">{active.other?.fullName || 'Unknown User'}</div>
+                  <div className="text-xs text-fg3">{active.other?.studentCode || active.other?.username || 'Unknown'}</div>
                 </div>
               </div>
 
