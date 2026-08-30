@@ -41,6 +41,9 @@ export function useTheme(): Ctx {
 
 /** Reads a themed CSS token so canvas libraries (Chart.js) stay in sync. */
 export function cssToken(name: string): string {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return "";
+  }
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
