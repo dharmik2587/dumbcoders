@@ -21,6 +21,7 @@ function SignInContent() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'github' | 'google' | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const supabaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -43,32 +44,23 @@ function SignInContent() {
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
       await signIn(email, password);
-      // Check if onboarding is complete before redirecting
-      try {
-        const res = await fetch('/api/users/me');
-        if (res.ok) {
-          const body = await res.json();
-          if (body.data && !body.data.onboardingDone) {
-            router.push('/onboarding');
-            return;
-          }
-        }
-      } catch {
-        // If profile check fails, redirect to onboarding to be safe
-      }
       router.push(redirectTo);
     } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not sign in. Check your email and password.');
       setLoading(false);
     }
   };
 
   const handleOAuthSignIn = async (provider: 'github' | 'google') => {
     setOauthLoading(provider);
+    setErrorMsg('');
     try {
       await signInWithOAuth(provider, redirectTo);
     } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not connect to that provider.');
       setOauthLoading(null);
     }
   };
@@ -94,6 +86,11 @@ function SignInContent() {
             {callbackError && (
               <div className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-3 text-[13px] text-red-400">
                 Authentication failed. Please try again.
+              </div>
+            )}
+            {errorMsg && (
+              <div className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-3 text-[13px] text-red-400">
+                {errorMsg}
               </div>
             )}
 
@@ -177,7 +174,7 @@ function SignInContent() {
           
           <div className="border-t border-line bg-raised px-8 py-5 text-center">
             <p className="text-[13px] text-fg2">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/sign-up" className="text-accent hover:text-accent-ink transition-colors font-medium">
                 Create profile
               </Link>

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
   // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get('next') ?? '/discover';
+  const next = searchParams.get('next') ?? '/profile';
 
   // Supabase may redirect back with an error (e.g. user denied consent)
   if (error) {
@@ -39,20 +39,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/sign-in?error=auth_callback_failed`);
   }
 
-  // Determine redirect destination based on onboarding status
   let redirectPath = next;
 
   if (hasCoreDatabase()) {
     try {
-      const profile = await ensureStudentProfile(data.user);
-      // If onboarding is not complete, always redirect to onboarding
-      if (!profile.onboardingDone) {
-        redirectPath = '/onboarding';
-      }
+      await ensureStudentProfile(data.user);
     } catch (e) {
       console.error('Failed to auto-provision Neon student profile on callback:', e);
-      // If we can't check, send to onboarding to be safe
-      redirectPath = '/onboarding';
+      redirectPath = '/profile';
     }
   }
 
@@ -67,4 +61,3 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}${redirectPath}`);
   }
 }
-

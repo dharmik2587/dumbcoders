@@ -395,12 +395,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("hackmate.rail", collapsed ? "1" : "0");
   }, [collapsed]);
 
-  // Client-side onboarding and verification guards
+  // Client-side verification guard
   useEffect(() => {
-    if (!me) return;
-    if ((me as any).onboardingDone === false) {
-      router.replace('/onboarding');
-    } else if (me.verified === false && pathname !== '/profile') {
+    if (!me?.id) return;
+    if (me.verified === false && pathname !== '/profile') {
       router.replace('/profile');
     }
   }, [me, router, pathname]);
@@ -769,5 +767,4 @@ function Wordmark() {
     </svg>
   );
 }
-
 

@@ -23,9 +23,9 @@ const BASE_ROSTER = [
 ];
 
 const DELTAS: Record<string, { coverage: number; name: string; role: string; hours: number[]; stack: string[] }> = {
-  "REQ-2291": { coverage: 12, name: "Ananya R.", role: "AI / ML", hours: [3, 2, 4, 2, 3, 4, 3], stack: ["PyTorch", "Python"] },
-  "REQ-2288": { coverage: 7, name: "Dev M.", role: "Backend", hours: [2, 4, 3, 1, 4, 3, 1], stack: ["Go", "Postgres"] },
-  "REQ-2284": { coverage: 9, name: "Sara K.", role: "Design", hours: [1, 1, 2, 4, 2, 2, 1], stack: ["Figma", "Motion"] },
+  "REQ-2291": { coverage: 12, name: "Priya T.", role: "AI / ML", hours: [3, 2, 4, 2, 3, 4, 3], stack: ["PyTorch", "Python"] },
+  "REQ-2288": { coverage: 7, name: "Arjun K.", role: "Backend", hours: [2, 4, 3, 1, 4, 3, 1], stack: ["Go", "Postgres"] },
+  "REQ-2284": { coverage: 9, name: "Meera S.", role: "Design", hours: [1, 1, 2, 4, 2, 2, 1], stack: ["Figma", "Motion"] },
 };
 
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];

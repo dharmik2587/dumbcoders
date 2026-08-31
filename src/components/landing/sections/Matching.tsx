@@ -7,21 +7,21 @@ import { cn } from "@/lib/utils";
 
 type Break = { id: string; raw: number };
 const BREAKDOWN: Record<string, Break[]> = {
-  "Ananya R.": [
+  "Priya T.": [
     { id: "S-01", raw: 0.96 },
     { id: "S-02", raw: 0.98 },
     { id: "S-03", raw: 0.91 },
     { id: "S-04", raw: 0.88 },
     { id: "S-05", raw: 0.95 },
   ],
-  "Dev M.": [
+  "Arjun K.": [
     { id: "S-01", raw: 0.82 },
     { id: "S-02", raw: 0.94 },
     { id: "S-03", raw: 0.86 },
     { id: "S-04", raw: 0.98 },
     { id: "S-05", raw: 0.78 },
   ],
-  "Sara K.": [
+  "Meera S.": [
     { id: "S-01", raw: 0.93 },
     { id: "S-02", raw: 0.75 },
     { id: "S-03", raw: 0.79 },

@@ -21,6 +21,7 @@ function SignUpContent() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'github' | 'google' | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (emailParam) {
@@ -50,6 +51,7 @@ function SignUpContent() {
     e.preventDefault();
     setLoading(true);
     setSuccessMsg('');
+    setErrorMsg('');
 
     try {
       await signUp(email, password, { full_name: fullName });
@@ -58,12 +60,12 @@ function SignUpContent() {
       // If we need to show a message:
       const authState = useApiStore.getState().me;
       if (authState) {
-        router.push('/onboarding');
+        router.push('/profile');
       } else {
         setSuccessMsg('Registration successful! Please check your email to confirm your account and sign in.');
       }
     } catch (err) {
-      // Error is handled by API store (toast)
+      setErrorMsg(err instanceof Error ? err.message : 'Could not create your account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -71,9 +73,11 @@ function SignUpContent() {
 
   const handleOAuthSignUp = async (provider: 'github' | 'google') => {
     setOauthLoading(provider);
+    setErrorMsg('');
     try {
-      await signInWithOAuth(provider, '/onboarding');
+      await signInWithOAuth(provider, '/profile');
     } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not connect to that provider.');
       setOauthLoading(null);
     }
   };
@@ -99,6 +103,11 @@ function SignUpContent() {
             {successMsg && (
               <div className="rounded-md border border-mint/30 bg-mint/5 px-4 py-3 text-[13px] text-mint">
                 {successMsg}
+              </div>
+            )}
+            {errorMsg && (
+              <div className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-3 text-[13px] text-red-400">
+                {errorMsg}
               </div>
             )}
 

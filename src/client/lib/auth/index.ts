@@ -70,7 +70,7 @@ export async function signInWithGoogle(redirectTo?: string) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo || '/onboarding')}`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo || '/profile')}`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -86,7 +86,7 @@ export async function signInWithGitHub(redirectTo?: string) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo || '/onboarding')}`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo || '/profile')}`,
       scopes: 'user:email read:user',
     },
   });

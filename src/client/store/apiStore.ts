@@ -212,6 +212,9 @@ export const useApiStore = create<State>()(
               isAuthenticated: true,
               me: authState.user as Builder,
             });
+            // Hydrate the database profile so the submitted full name appears
+            // immediately after email/password signup.
+            await get().loadUser();
             get().pushToast({
               label: 'Success',
               body: 'Account created successfully',
@@ -694,4 +697,3 @@ export function useBuilder(id: string | undefined): Builder | undefined {
   const builders = useApiStore((s) => s.builders);
   return builders.find((b) => b.id === id);
 }
-

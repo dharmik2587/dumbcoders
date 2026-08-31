@@ -465,8 +465,8 @@ export const REQUESTS: CollabRequest[] = [
 ];
 
 export const NOTIFICATIONS: Notification[] = [
-  { id: "n1", kind: "request", title: "New request · Ananya R.", body: "AI / ML for Orbit-04 · 94% complement", at: "4m ago", read: false, href: "/requests" },
+  { id: "n1", kind: "request", title: "New request · Priya T.", body: "AI / ML for Orbit-04 · 94% complement", at: "4m ago", read: false, href: "/requests" },
   { id: "n2", kind: "deadline", title: "Symbiosis closes in 6 days", body: "Registration ends 2026-03-14", at: "1h ago", read: false, href: "/discover" },
   { id: "n3", kind: "match", title: "3 new complements", body: "Builders who close your AI/ML gap", at: "5h ago", read: true, href: "/match" },
-  { id: "n4", kind: "team", title: "Sara K. joined Slate", body: "Design slot closed", at: "1d ago", read: true, href: "/teams" },
+  { id: "n4", kind: "team", title: "Meera S. joined Slate", body: "Design slot closed", at: "1d ago", read: true, href: "/teams" },
 ];

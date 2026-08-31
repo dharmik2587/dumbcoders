@@ -242,12 +242,18 @@ export default function Discover() {
           </div>
         ) : list.length === 0 ? (
           <EmptyState
-            title="Nothing matches this combination"
-            body="The index holds 24 events this cycle. Loosen the deadline or track filter, or clear everything and browse."
+            title={activeFilters > 0 ? "Nothing matches this combination" : "No hackathons found"}
+            body={activeFilters > 0 ? "The index holds 24 events this cycle. Loosen the deadline or track filter, or clear everything and browse." : "The hackathon index is currently empty. Try refreshing the data."}
             action={
-              <Button variant="outline" onClick={() => router.replace(pathname, { scroll: false })}>
-                Clear all filters
-              </Button>
+              activeFilters > 0 ? (
+                <Button variant="outline" onClick={() => router.replace(pathname, { scroll: false })}>
+                  Clear all filters
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => { setLoading(true); useApiStore.getState().refreshHackathons().then(() => setLoading(false)); }}>
+                  Refresh Hackathons
+                </Button>
+              )
             }
           />
         ) : (

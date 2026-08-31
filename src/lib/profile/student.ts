@@ -80,7 +80,8 @@ export async function ensureStudentProfile(user: User): Promise<Profile> {
       username,
       skills: [],
       hackathonInterests: [],
-      onboardingDone: false,
+      // Onboarding is currently hidden; profile setup happens on /profile.
+      onboardingDone: true,
       isOpenToTeam: true,
       profileComplete: 10,
     })

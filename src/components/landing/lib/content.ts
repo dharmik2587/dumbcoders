@@ -161,7 +161,7 @@ export const matchSignals = [
 export const candidates = [
   {
     id: "b-117",
-    name: "Ananya R.",
+    name: "Priya T.",
     meta: "3rd yr · CSE · VIT",
     score: 94,
     reason: "Covers your LLM + design gap",
@@ -171,7 +171,7 @@ export const candidates = [
   },
   {
     id: "b-204",
-    name: "Dev M.",
+    name: "Arjun K.",
     meta: "2nd yr · ECE · BITS",
     score: 87,
     reason: "Ships fast backend, same stack",
@@ -181,7 +181,7 @@ export const candidates = [
   },
   {
     id: "b-318",
-    name: "Sara K.",
+    name: "Meera S.",
     meta: "4th yr · Design · NIFT",
     score: 81,
     reason: "Pitch deck + prototype polish",
@@ -204,7 +204,7 @@ export const candidates = [
 export const requests = [
   {
     id: "REQ-2291",
-    from: "Ananya R.",
+    from: "Priya T.",
     role: "AI / ML",
     event: "Symbiosis",
     message: "I read your problem statement — I can train the triage model by Saturday.",
@@ -213,7 +213,7 @@ export const requests = [
   },
   {
     id: "REQ-2288",
-    from: "Dev M.",
+    from: "Arjun K.",
     role: "Backend",
     event: "Nullspace",
     message: "Got a Go ingest service already scaffolded. Can I plug in?",
@@ -222,10 +222,10 @@ export const requests = [
   },
   {
     id: "REQ-2284",
-    from: "Sara K.",
+    from: "Meera S.",
     role: "Design",
-    event: "Symbiosis",
-    message: "Sending a flow draft tonight. Team looks frontend-heavy.",
+    event: "HackVerse",
+    message: "Love the UI, but it needs a coherent design system. Let's talk.",
     age: "5h ago",
     state: "accepted" as const,
   },

@@ -28,7 +28,7 @@ function useInviewOnce() {
 
 const MEMBERS = [
   { id: "you", name: "You", role: "Frontend" },
-  { id: "dev", name: "Dev M.", role: "Backend" },
+  { id: "dev", name: "Arjun K.", role: "Backend" },
   { id: "riya", name: "Riya S.", role: "Product" },
   { id: "open", name: "Open", role: "unfilled" },
 ];
@@ -60,7 +60,7 @@ const FINDINGS = [
     id: "F-02",
     sev: "watch",
     title: "Frontend overlap at 84%",
-    body: "You and Dev M. both hold the interface layer. One of you will idle during the integration window.",
+    body: "You and Arjun K. both hold the interface layer. One of you will idle during the integration window.",
     action: "Suggest role split",
   },
   {

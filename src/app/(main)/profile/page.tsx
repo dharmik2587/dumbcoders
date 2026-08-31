@@ -112,7 +112,7 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    if (!initialMe) {
+    if (!initialMe?.id) {
       void loadUser();
     }
   }, [initialMe, loadUser]);

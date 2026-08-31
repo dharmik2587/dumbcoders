@@ -970,9 +970,9 @@ function Composition() {
             <Reveal delay={180}>
               <div className="mt-6 grid gap-px border border-line bg-line sm:grid-cols-3">
                 {[
-                  ["REQ-2291", "Ananya R.", "AI / ML", "+12% coverage"],
-                  ["REQ-2288", "Dev M.", "Backend", "+7% coverage"],
-                  ["REQ-2284", "Sara K.", "Design", "+9% coverage"],
+                  ["REQ-2291", "Priya T.", "AI / ML", "+12% coverage"],
+                  ["REQ-2288", "Arjun K.", "Backend", "+7% coverage"],
+                  ["REQ-2284", "Meera S.", "Design", "+9% coverage"],
                 ].map(([id, name, role, delta]) => (
                   <div key={id} className="bg-surface p-4">
                     <span className="font-mono text-[10px] tracking-[0.16em] text-fg3">{id}</span>
@@ -1175,7 +1175,7 @@ function FinalCTA() {
               </Link>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[0.16em] text-fg3">
-              <span>onboarding 6 min</span>
+              <span>profile setup in minutes</span>
               <span className="hidden h-3 w-px bg-line sm:block" />
               <span>college email required</span>
               <span className="hidden h-3 w-px bg-line sm:block" />

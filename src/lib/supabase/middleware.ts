@@ -1,25 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-/**
- * Paths that do NOT require onboarding to be completed.
- * Everything else under /(main)/* requires onboarding.
- */
-const ONBOARDING_EXEMPT = new Set([
-  '/sign-in',
-  '/sign-up',
-  '/onboarding',
-]);
-
-function isOnboardingExempt(pathname: string) {
-  if (pathname === '/') return true;
-  if (pathname.startsWith('/auth/')) return true;
-  if (pathname.startsWith('/api/')) return true;
-  if (pathname.startsWith('/_next/')) return true;
-  if (pathname.startsWith('/hackathons')) return true;
-  return ONBOARDING_EXEMPT.has(pathname);
-}
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -60,37 +41,32 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Keep the old page in the codebase, but hide it from the active product flow.
+  if (pathname === '/onboarding') {
+    return NextResponse.redirect(new URL(user ? '/profile' : '/sign-in', request.url));
+  }
+
   // Redirect authenticated users from landing page to discover
   if (user && pathname === '/') {
     return NextResponse.redirect(new URL('/discover', request.url));
   }
 
-  // Onboarding gate: if user is authenticated and visiting a protected route,
-  // check if their profile onboarding is complete.
-  if (user && !isOnboardingExempt(pathname) && process.env.CORE_DATABASE_URL) {
+  // Unverified users can edit their profile, but cannot use the rest of the app.
+  if (user && pathname !== '/profile' && process.env.CORE_DATABASE_URL) {
     try {
-      // Lightweight check: query the profile's onboarding status directly
+      // Lightweight check: query whether the profile has verified a college email.
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.CORE_DATABASE_URL);
-      const rows = await sql`SELECT onboarding_done, college_id FROM profiles WHERE id = ${user.id} LIMIT 1`;
+      const rows = await sql`SELECT college_id FROM profiles WHERE id = ${user.id} LIMIT 1`;
       const profile = rows[0];
 
-      // If profile doesn't exist yet or onboarding is not done, redirect to onboarding
-      if (!profile || !profile.onboarding_done) {
-        const onboardingUrl = new URL('/onboarding', request.url);
-        return NextResponse.redirect(onboardingUrl);
-      }
-
-      // Verification lock: if onboarding is done but college email is not verified, lock all features except /profile
-      if (profile.onboarding_done && !profile.college_id) {
-        if (pathname !== '/profile') {
-          const profileUrl = new URL('/profile', request.url);
-          return NextResponse.redirect(profileUrl);
-        }
+      if (!profile || !profile.college_id) {
+        const profileUrl = new URL('/profile', request.url);
+        return NextResponse.redirect(profileUrl);
       }
     } catch (e) {
       // If DB check fails, don't block the user — let them through
-      console.error('Middleware onboarding check failed:', e);
+      console.error('Middleware verification check failed:', e);
     }
   }
 
