@@ -42,6 +42,8 @@ export const profileUpdateSchema = z.object({
   portfolioUrl: optionalUrl,
   linkedinUrl: optionalUrl,
   collegeEmail: optionalString(150),
+  githubUsername: optionalString(100),
+  leetcodeUsername: optionalString(100),
   onboardingDone: z.boolean().optional(),
   isOpenToTeam: z.boolean().optional(),
 });

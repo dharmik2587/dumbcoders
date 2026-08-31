@@ -1,25 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { hasSupabaseConfig } from '@/lib/env';
-import { getCoreDb } from '@/lib/db/core';
-import { profiles } from '@/lib/db/schema/core';
-import { eq } from 'drizzle-orm';
 
-export async function requireVerifiedUserId(token?: string): Promise<string> {
-  const userId = await requireUserId(token);
-  try {
-    const db = getCoreDb();
-    const profile = await db.select({ collegeId: profiles.collegeId }).from(profiles).where(eq(profiles.id, userId)).limit(1);
-    if (!profile[0] || !profile[0].collegeId) {
-      throw new Error('Unverified');
-    }
-    return userId;
-  } catch (err: any) {
-    if (err.message === 'Unverified') throw err;
-    // Database connection issues shouldn't hard-fail as unverified if we can't check
-    // but the instruction says to lock features until verified.
-    throw new Error('Unverified');
-  }
-}
 
 export async function getOptionalUser(token?: string) {
   if (!hasSupabaseConfig()) return null;

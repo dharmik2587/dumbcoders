@@ -138,9 +138,8 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
-    const selectedSkills = me.skills
-      .filter((s) => s.level > 0)
-      .map((s) => s.label);
+    const selectedSkills = me.skills.filter((s) => s.level > 0).map((s) => s.label);
+    const githubUsername = me.repos?.[0]?.url?.match(/github\.com\/([^/]+)/)?.[1] ?? undefined;
 
     try {
       await updateProfileApi({
@@ -152,7 +151,7 @@ export default function Profile() {
         skills: selectedSkills,
         isOpenToTeam: me.openToTeams,
         availability: me.availability.length > 0 ? `${me.availability.length} active slots` : undefined,
-        githubUsername: me.repos?.[0]?.url?.split('github.com/')?.[1]?.split('/')?.[0] || undefined,
+        githubUsername,
       });
       await loadUser();
     } catch (e: any) {
@@ -619,7 +618,7 @@ export default function Profile() {
                 <div className="mt-3 flex items-center gap-2">
                   <Globe size={13} className="text-fg3" />
                   <span className="font-mono text-[10px] text-fg3">
-                    {me.verified ? "discoverable · accepting requests" : "verification required to access features"}
+                    {me.verified ? "discoverable · accepting requests" : "discoverable · optional college verify"}
                   </span>
                 </div>
               </div>

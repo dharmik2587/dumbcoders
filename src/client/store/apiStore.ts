@@ -40,7 +40,7 @@ export function mapProfileToBuilder(profile: any): Builder {
     availability: profile.availability ? [{ day: 6, start: 9, end: 17 }] : [],
     weeklyHours: 10,
     openToTeams: !!profile.isOpenToTeam,
-    verified: Boolean(profile.collegeId || profile.college?.id || profile.verified),
+    verified: true, // Always true — email verification is informational only, not a feature gate
     lastActive: profile.updatedAt || new Date().toISOString(),
     onboardingDone: !!profile.onboardingDone,
   } as any;

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { requireUserId, requireVerifiedUserId } from '@/lib/auth/server';
+import { requireUserId } from '@/lib/auth/server';
 import { getCoreDb, hasCoreDatabase } from '@/lib/db/core';
 import { createOutboxEvent } from '@/lib/db/queries/notifications';
 import { listMyTeams } from '@/lib/db/queries/teams';
@@ -19,14 +19,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   let userId: string;
-  try { 
-    userId = await requireVerifiedUserId(); 
-  } catch (err: any) { 
-    if (err.message === 'Unverified') {
-      return failure('UNVERIFIED', 'Please verify your college email to use this feature.', 403);
-    }
-    return failure('UNAUTHORIZED', 'Sign in to continue.', 401); 
-  }
+  try { userId = await requireUserId(); } catch { return failure('UNAUTHORIZED', 'Sign in to continue.', 401); }
   if (!hasCoreDatabase()) return failure('NOT_CONFIGURED', 'Database is not configured.', 503);
   const parsed = createTeamSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return failure('VALIDATION_ERROR', 'Invalid team details.', 400);
