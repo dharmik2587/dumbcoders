@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getOptionalUser, requireUser } from '@/lib/auth/server';
-import { hasCoreDatabase } from '@/lib/db/core';
+import { hasCoreDatabase, isDatabaseQuotaError } from '@/lib/db/core';
 import { updateProfile } from '@/lib/db/queries/profiles';
 import { ensureStudentProfile, getStudentByAnyKey } from '@/lib/profile/student';
 import { failure, success } from '@/lib/http';
@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
   if (!hasCoreDatabase()) return failure('NOT_CONFIGURED', 'Database is not configured.', 503);
 
   try {
-    await ensureStudentProfile(user);
+    const profileResult = await ensureStudentProfile(user);
+    if (!profileResult) {
+      return failure('PROFILE_CREATION_FAILED', 'Could not load or create your profile. Database might be out of sync.', 500);
+    }
     const data = await getStudentByAnyKey(user.id);
     if (!data) return failure('PROFILE_NOT_FOUND', 'Could not load your profile.', 404);
 
@@ -27,6 +30,9 @@ export async function GET(request: NextRequest) {
     return success(profile);
   } catch (error) {
     console.error('GET /api/users/me failed', error);
+    if (isDatabaseQuotaError(error)) {
+      return failure('DATABASE_QUOTA_EXCEEDED', 'The database quota has been exceeded. Restore Neon database capacity to load your profile.', 503);
+    }
     return failure('DATABASE_ERROR', 'Could not load your profile.', 500);
   }
 }
@@ -51,7 +57,10 @@ export async function PATCH(request: NextRequest) {
 
   try {
     // Ensure profile row exists in database before patching
-    await ensureStudentProfile(user);
+    const profileResult = await ensureStudentProfile(user);
+    if (!profileResult) {
+      return failure('PROFILE_CREATION_FAILED', 'Could not load or create your profile. Database might be out of sync.', 500);
+    }
 
     const updated = await updateProfile(user.id, parsed.data);
     if (!updated) return failure('PROFILE_NOT_FOUND', 'Profile could not be updated.', 404);
@@ -64,6 +73,9 @@ export async function PATCH(request: NextRequest) {
     return success(profile);
   } catch (error: any) {
     console.error('PATCH /api/users/me failed:', error);
+    if (isDatabaseQuotaError(error)) {
+      return failure('DATABASE_QUOTA_EXCEEDED', 'The database quota has been exceeded. Restore Neon database capacity before saving profile details.', 503);
+    }
     const msg = error instanceof Error ? error.message : String(error);
     return failure('DATABASE_ERROR', `Could not update your profile: ${msg}`, 500);
   }

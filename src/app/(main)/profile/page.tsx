@@ -152,10 +152,16 @@ export default function Profile() {
         skills: selectedSkills,
         isOpenToTeam: me.openToTeams,
         availability: me.availability.length > 0 ? `${me.availability.length} active slots` : undefined,
+        githubUsername: me.repos?.[0]?.url?.split('github.com/')?.[1]?.split('/')?.[0] || undefined,
       });
       await loadUser();
-    } catch (e) {
-      console.warn("Backend profile sync notice:", e);
+    } catch (e: any) {
+      console.warn("Backend profile sync error:", e);
+      pushToast({
+        label: 'Error',
+        body: e?.message || 'Failed to update profile.',
+        tone: 'bad',
+      });
     } finally {
       setSaving(false);
       setDirty(false);

@@ -16,78 +16,94 @@ export function generateStudentCode(userId: string): string {
  * Ensures a profile exists in Neon database for a Supabase authenticated student.
  * Pulls student details from Supabase User and links via studentCode & userId.
  */
-export async function ensureStudentProfile(user: User): Promise<Profile> {
+export async function ensureStudentProfile(user: User): Promise<Profile | null> {
   const db = getCoreDb();
-  const existing = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.id, user.id))
-    .limit(1);
-
-  if (existing[0]) {
-    // If studentCode wasn't set previously, populate it
-    if (!existing[0].studentCode) {
-      const code = generateStudentCode(user.id);
-      const [updated] = await db
-        .update(profiles)
-        .set({ studentCode: code, updatedAt: new Date() })
-        .where(eq(profiles.id, user.id))
-        .returning();
-      return updated ?? existing[0];
-    }
-    return existing[0];
-  }
-
-  // Create new profile linked to Supabase Auth User
-  const studentCode = generateStudentCode(user.id);
-  const rawFullName =
-    (user.user_metadata?.full_name as string) ||
-    (user.user_metadata?.name as string) ||
-    '';
-  const avatarUrl =
-    (user.user_metadata?.avatar_url as string) ||
-    (user.user_metadata?.picture as string) ||
-    null;
-
-  const baseName = usernameBase({
-    username: user.user_metadata?.user_name as string,
-    email: user.email,
-    userId: user.id,
-  });
-
-  let username = baseName;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const candidate = usernameCandidate(baseName, attempt);
-    const taken = await db
-      .select({ id: profiles.id })
+  try {
+    const existing = await db
+      .select()
       .from(profiles)
-      .where(eq(profiles.username, candidate))
+      .where(eq(profiles.id, user.id))
       .limit(1);
-    if (!taken[0]) {
-      username = candidate;
-      break;
+
+    if (existing[0]) {
+      // If studentCode wasn't set previously, populate it
+      if (!existing[0].studentCode) {
+        const code = generateStudentCode(user.id);
+        const [updated] = await db
+          .update(profiles)
+          .set({ studentCode: code, updatedAt: new Date() })
+          .where(eq(profiles.id, user.id))
+          .returning();
+        return updated ?? existing[0];
+      }
+      return existing[0];
+    }
+
+    // Create new profile linked to Supabase Auth User
+    const studentCode = generateStudentCode(user.id);
+    const rawFullName =
+      (user.user_metadata?.full_name as string) ||
+      (user.user_metadata?.name as string) ||
+      '';
+    const avatarUrl =
+      (user.user_metadata?.avatar_url as string) ||
+      (user.user_metadata?.picture as string) ||
+      null;
+
+    const baseName = usernameBase({
+      username: user.user_metadata?.user_name as string,
+      email: user.email,
+      userId: user.id,
+    });
+
+    let username = baseName;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const candidate = usernameCandidate(baseName, attempt);
+      const taken = await db
+        .select({ id: profiles.id })
+        .from(profiles)
+        .where(eq(profiles.username, candidate))
+        .limit(1);
+      if (!taken[0]) {
+        username = candidate;
+        break;
+      }
+    }
+
+    const [created] = await db
+      .insert(profiles)
+      .values({
+        id: user.id,
+        studentCode,
+        email: user.email ?? null,
+        fullName: rawFullName || null,
+        avatarUrl,
+        username,
+        skills: [],
+        hackathonInterests: [],
+        // Onboarding is currently hidden; profile setup happens on /profile.
+        onboardingDone: true,
+        isOpenToTeam: true,
+        profileComplete: 10,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (!created) {
+      const refetch = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
+      return refetch[0] ?? null;
+    }
+
+    return created;
+  } catch (error) {
+    console.error('ensureStudentProfile error:', error);
+    try {
+      const refetch = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
+      return refetch[0] ?? null;
+    } catch {
+      return null;
     }
   }
-
-  const [created] = await db
-    .insert(profiles)
-    .values({
-      id: user.id,
-      studentCode,
-      email: user.email ?? null,
-      fullName: rawFullName || null,
-      avatarUrl,
-      username,
-      skills: [],
-      hackathonInterests: [],
-      // Onboarding is currently hidden; profile setup happens on /profile.
-      onboardingDone: true,
-      isOpenToTeam: true,
-      profileComplete: 10,
-    })
-    .returning();
-
-  return created;
 }
 
 /**

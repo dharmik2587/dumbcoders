@@ -21,7 +21,7 @@ import {
   Tabs,
 } from "@/components/ui";
 import { cn } from "@/client/utils/cn";
-import { removeTeamMember } from "@/client/lib/api";
+import { removeTeamMember, getTeamMessages, sendTeamMessage } from "@/client/lib/api";
 
 const STATE_TONE: Record<RequestState, "accent" | "mint" | "amber" | "danger" | "neutral"> = {
   new: "accent",
@@ -704,9 +704,68 @@ function TeamWorkspace() {
               )}
             </Panel>
           </Reveal>
+
+          <Reveal delay={120}>
+            <TeamChat teamId={team.id} />
+          </Reveal>
         </div>
       </div>
     </div>
+  );
+}
+
+function TeamChat({ teamId }: { teamId: string }) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const me = useMe();
+  
+  useEffect(() => {
+    getTeamMessages(teamId).then(setMessages).catch(console.error);
+  }, [teamId]);
+
+  return (
+    <Panel>
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+        <Label tone="accent">team chat</Label>
+      </div>
+      <div className="flex h-80 flex-col overflow-y-auto p-5 space-y-4">
+        {messages.length === 0 ? (
+           <div className="text-center text-sm text-fg3 mt-10">No messages yet. Say hi!</div>
+        ) : (
+           messages.map(msg => {
+             const isMe = msg.senderId === me?.id;
+             return (
+               <div key={msg.id} className={cn("flex flex-col max-w-[85%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
+                 <div className="text-[10px] text-fg3 mb-1 px-1">{isMe ? "You" : msg.senderName || msg.senderId.substring(0,6)}</div>
+                 <div className={cn("rounded-2xl px-4 py-2 text-sm", isMe ? "bg-accent text-white" : "bg-raised text-fg")}>
+                   {msg.content}
+                 </div>
+               </div>
+             );
+           })
+        )}
+      </div>
+      <div className="border-t border-line p-4">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!input.trim()) return;
+          const val = input.trim();
+          setInput("");
+          await sendTeamMessage(teamId, val).catch(console.error);
+          getTeamMessages(teamId).then(setMessages).catch(console.error);
+        }} className="flex gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 rounded-full border border-line bg-canvas px-4 py-2 text-sm text-fg placeholder:text-fg3 outline-none focus:border-accent"
+          />
+          <button type="submit" disabled={!input.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-white transition-opacity disabled:opacity-50">
+            <Send size={16} />
+          </button>
+        </form>
+      </div>
+    </Panel>
   );
 }
 

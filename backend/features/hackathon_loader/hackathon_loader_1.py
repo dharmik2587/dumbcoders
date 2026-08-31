@@ -19,6 +19,9 @@ from typing import List, Dict, Any, Optional
 
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     from apify_client import ApifyClient

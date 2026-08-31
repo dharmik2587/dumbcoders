@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { requireUser } from '@/lib/auth/server';
+import { isDatabaseQuotaError } from '@/lib/db/core';
 import { failure, success } from '@/lib/http';
 import {
   isEduEmail,
@@ -65,6 +66,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error sending college OTP:', error);
+    if (isDatabaseQuotaError(error)) {
+      return failure('DATABASE_QUOTA_EXCEEDED', 'The database quota has been exceeded. Restore Neon database capacity before verifying your student email.', 503);
+    }
     return failure('SERVER_ERROR', error?.message || 'Could not send verification email.', 500);
   }
 }

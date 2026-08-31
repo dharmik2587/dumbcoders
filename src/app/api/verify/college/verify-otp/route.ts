@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireUser } from '@/lib/auth/server';
 import { failure, success } from '@/lib/http';
-import { getCoreDb } from '@/lib/db/core';
+import { getCoreDb, isDatabaseQuotaError } from '@/lib/db/core';
 import { profiles } from '@/lib/db/schema/core';
 import { eq } from 'drizzle-orm';
 import {
@@ -67,6 +67,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error verifying college OTP:', error);
+    if (isDatabaseQuotaError(error)) {
+      return failure('DATABASE_QUOTA_EXCEEDED', 'The database quota has been exceeded. Restore Neon database capacity before completing verification.', 503);
+    }
     return failure('SERVER_ERROR', error?.message || 'Could not verify code.', 500);
   }
 }

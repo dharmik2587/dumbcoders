@@ -53,23 +53,23 @@ export function extractDomain(email: string): string {
 export async function getOrCreateCollegeByDomain(domain: string) {
   const db = getCoreDb();
   
-  // 1. Look up existing college
-  const existing = await db
-    .select()
-    .from(colleges)
-    .where(eq(colleges.domain, domain))
-    .limit(1);
-
-  if (existing[0]) {
-    return existing[0];
-  }
-
-  // 2. Format a human-readable institution name from domain (e.g. "iar.ac.in" -> "IAR", "iitb.ac.in" -> "IITB")
-  const baseName = domain.split('.')[0].toUpperCase();
-  const readableName = `${baseName} Institute`;
-  const shortName = baseName;
-
   try {
+    // 1. Look up existing college
+    const existing = await db
+      .select()
+      .from(colleges)
+      .where(eq(colleges.domain, domain))
+      .limit(1);
+
+    if (existing[0]) {
+      return existing[0];
+    }
+
+    // 2. Format a human-readable institution name from domain
+    const baseName = domain.split('.')[0].toUpperCase();
+    const readableName = `${baseName} Institute`;
+    const shortName = baseName;
+
     const [created] = await db
       .insert(colleges)
       .values({
@@ -79,14 +79,19 @@ export async function getOrCreateCollegeByDomain(domain: string) {
       })
       .returning();
     return created;
-  } catch {
-    // If concurrent insert occurred, fetch again
-    const refetch = await db
-      .select()
-      .from(colleges)
-      .where(eq(colleges.domain, domain))
-      .limit(1);
-    return refetch[0] ?? null;
+  } catch (err) {
+    console.error('getOrCreateCollegeByDomain error:', err);
+    try {
+      // If concurrent insert occurred, fetch again
+      const refetch = await db
+        .select()
+        .from(colleges)
+        .where(eq(colleges.domain, domain))
+        .limit(1);
+      return refetch[0] ?? null;
+    } catch {
+      return null;
+    }
   }
 }
 
