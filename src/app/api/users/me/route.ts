@@ -15,12 +15,23 @@ export async function GET(request: NextRequest) {
   if (!hasCoreDatabase()) return failure('NOT_CONFIGURED', 'Database is not configured.', 503);
 
   try {
-    const profileResult = await ensureStudentProfile(user);
-    if (!profileResult) {
-      return failure('PROFILE_CREATION_FAILED', 'Could not load or create your profile. Database might be out of sync.', 500);
+    // Try to ensure profile exists, but don't hard-fail if it returns null —
+    // getStudentByAnyKey below will be the final arbiter.
+    try {
+      await ensureStudentProfile(user);
+    } catch (profileErr) {
+      console.error('ensureStudentProfile threw:', profileErr);
     }
+
     const data = await getStudentByAnyKey(user.id);
-    if (!data) return failure('PROFILE_NOT_FOUND', 'Could not load your profile.', 404);
+    if (!data) {
+      // Profile genuinely doesn't exist — one more attempt to create it
+      const profile = await ensureStudentProfile(user);
+      if (!profile) {
+        return failure('PROFILE_NOT_FOUND', 'Your profile could not be created. Please try signing out and back in.', 404);
+      }
+      return success({ ...profile, college: null, github: null });
+    }
 
     const profile = {
       ...data.profile,

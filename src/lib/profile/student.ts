@@ -15,10 +15,18 @@ export function generateStudentCode(userId: string): string {
 /**
  * Ensures a profile exists in Neon database for a Supabase authenticated student.
  * Pulls student details from Supabase User and links via studentCode & userId.
+ *
+ * Key design decisions:
+ * - We do NOT set `email` during initial creation — emails have a unique constraint
+ *   and including it causes silent INSERT failures if the email appears in any
+ *   existing row (orphaned accounts, re-signups, etc.).
+ * - The email is set later via the college email OTP verification flow or PATCH /api/users/me.
+ * - We use ON CONFLICT DO UPDATE on the PK (id) to handle any concurrent race conditions.
  */
 export async function ensureStudentProfile(user: User): Promise<Profile | null> {
   const db = getCoreDb();
   try {
+    // 1. Fast path: profile already exists
     const existing = await db
       .select()
       .from(profiles)
@@ -39,7 +47,7 @@ export async function ensureStudentProfile(user: User): Promise<Profile | null> 
       return existing[0];
     }
 
-    // Create new profile linked to Supabase Auth User
+    // 2. Create new profile
     const studentCode = generateStudentCode(user.id);
     const rawFullName =
       (user.user_metadata?.full_name as string) ||
@@ -56,8 +64,9 @@ export async function ensureStudentProfile(user: User): Promise<Profile | null> 
       userId: user.id,
     });
 
+    // Find a unique username
     let username = baseName;
-    for (let attempt = 0; attempt < 10; attempt++) {
+    for (let attempt = 0; attempt < 20; attempt++) {
       const candidate = usernameCandidate(baseName, attempt);
       const taken = await db
         .select({ id: profiles.id })
@@ -70,26 +79,34 @@ export async function ensureStudentProfile(user: User): Promise<Profile | null> 
       }
     }
 
+    // NOTE: We deliberately omit `email` here to avoid unique-constraint conflicts
+    // with any pre-existing row that has the same email address (e.g., orphaned rows,
+    // re-signups, Google + email dual auth). Email is set via OTP verification later.
     const [created] = await db
       .insert(profiles)
       .values({
         id: user.id,
         studentCode,
-        email: user.email ?? null,
         fullName: rawFullName || null,
         avatarUrl,
         username,
         skills: [],
         hackathonInterests: [],
-        // Onboarding is currently hidden; profile setup happens on /profile.
         onboardingDone: true,
         isOpenToTeam: true,
         profileComplete: 10,
       })
-      .onConflictDoNothing()
+      // If a concurrent request already inserted this id, update non-sensitive fields
+      .onConflictDoUpdate({
+        target: profiles.id,
+        set: {
+          updatedAt: new Date(),
+        },
+      })
       .returning();
 
     if (!created) {
+      // Last resort: re-fetch in case of any edge case
       const refetch = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
       return refetch[0] ?? null;
     }
@@ -97,6 +114,7 @@ export async function ensureStudentProfile(user: User): Promise<Profile | null> 
     return created;
   } catch (error) {
     console.error('ensureStudentProfile error:', error);
+    // Always try to return whatever row exists for this user
     try {
       const refetch = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
       return refetch[0] ?? null;
