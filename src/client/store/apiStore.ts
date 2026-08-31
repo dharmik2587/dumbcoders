@@ -181,20 +181,15 @@ export const useApiStore = create<State>()(
         try {
           const authState = await auth.getCurrentAuthState();
           if (authState.user) {
-            set({
-              isAuthenticated: true,
-              isLoading: false,
-              // A Supabase User is not a Builder. Keep the app model empty
-              // until /api/users/me hydrates the database profile.
-              me: null,
-            });
-            try {
-              await get().loadUser();
-              await get().loadTeams();
-              await get().loadConversations();
-            } catch (e) {
+            set({ isAuthenticated: true, isLoading: false, me: null });
+            // Load all user data in parallel — don't await sequentially
+            await Promise.all([
+              get().loadUser(),
+              get().loadTeams(),
+              get().loadConversations(),
+            ]).catch(() => {
               // Data loading errors shouldn't block auth init
-            }
+            });
           } else {
             set({ isAuthenticated: false, isLoading: false });
           }

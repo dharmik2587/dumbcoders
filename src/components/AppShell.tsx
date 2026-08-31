@@ -694,9 +694,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="relative px-4 pb-24 pt-6 md:px-6 md:pb-10">
           <motion.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
           >
             {children}
           </motion.div>
