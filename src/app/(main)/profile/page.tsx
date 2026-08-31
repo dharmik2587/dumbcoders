@@ -589,6 +589,18 @@ export default function Profile() {
                               ⚡ Dev Sandbox Code: <strong className="font-mono">{devOtpHint}</strong>
                             </div>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOtpSent(false);
+                              setOtpCode('');
+                              setDevOtpHint('');
+                              setOtpError('');
+                            }}
+                            className="font-mono text-[10px] uppercase tracking-[0.12em] text-fg3 hover:text-accent"
+                          >
+                            Use a different student email
+                          </button>
                         </div>
                       )}
 

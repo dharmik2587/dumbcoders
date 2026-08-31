@@ -25,7 +25,7 @@ function MessagesContent() {
   useEffect(() => {
     loadConversations().finally(async () => {
       setLoading(false);
-      const startId = searchParams?.get("start");
+      const startId = searchParams?.get("start") ?? searchParams?.get("to");
       if (startId) {
         const existing = useApiStore.getState().conversations.find((c) => c.other?.id === startId);
         if (existing) {

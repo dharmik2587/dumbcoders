@@ -184,7 +184,9 @@ export const useApiStore = create<State>()(
             set({
               isAuthenticated: true,
               isLoading: false,
-              me: authState.user as Builder,
+              // A Supabase User is not a Builder. Keep the app model empty
+              // until /api/users/me hydrates the database profile.
+              me: null,
             });
             try {
               await get().loadUser();
@@ -210,7 +212,7 @@ export const useApiStore = create<State>()(
           if (authState.user) {
             set({
               isAuthenticated: true,
-              me: authState.user as Builder,
+              me: null,
             });
             // Hydrate the database profile so the submitted full name appears
             // immediately after email/password signup.
@@ -240,7 +242,7 @@ export const useApiStore = create<State>()(
           if (authState.user) {
             set({
               isAuthenticated: true,
-              me: authState.user as Builder,
+              me: null,
             });
             await get().loadUser();
             await get().loadTeams();
@@ -360,15 +362,21 @@ export const useApiStore = create<State>()(
         try {
           const rawTeams = await api.listMyTeams();
           const mappedTeams = (rawTeams || []).map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            hackathonId: t.hackathonId,
-            ownerId: t.ownerId || t.leaderId,
-            members: t.members || [],
-            openSlots: t.openSlots || (t.rolesNeeded || []).map((role: any) => ({ role, note: '' })),
-            project: t.project || t.projectName,
-            visibility: t.visibility || (t.isOpen ? 'discoverable' : 'private'),
-            ...t
+            // The API returns { team, membership }; older UI code expects a
+            // flat team with members/openSlots, so normalize it at the edge.
+            ...(t.team || t),
+            id: (t.team || t).id,
+            name: (t.team || t).name,
+            hackathonId: (t.team || t).hackathonId,
+            ownerId: (t.team || t).leaderId || (t.team || t).ownerId,
+            members: (t.team || t).members || (t.members ? t.members : t.membership ? [{
+              builderId: t.membership.userId,
+              role: t.membership.role || 'member',
+              joinedAt: t.membership.joinedAt || '',
+            }] : []),
+            openSlots: (t.team || t).openSlots || ((t.team || t).rolesNeeded || []).map((role: any) => ({ role, note: '' })),
+            project: (t.team || t).project || (t.team || t).projectName,
+            visibility: (t.team || t).visibility || ((t.team || t).isOpen ? 'discoverable' : 'private'),
           }));
           set({ teams: mappedTeams as any[] });
           if (mappedTeams.length > 0 && !get().activeTeamId) {
@@ -494,7 +502,19 @@ export const useApiStore = create<State>()(
       // Create team
       createTeam: async (data) => {
         try {
-          const team = await api.createTeam(data);
+          const rawHackathonId = data.hackathonId;
+          const hackathonId = typeof rawHackathonId === 'string' &&
+            /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(rawHackathonId)
+            ? rawHackathonId
+            : null;
+          const team = await api.createTeam({
+            name: data.name,
+            description: data.description,
+            hackathonId,
+            maxMembers: data.maxMembers ?? data.cap ?? 4,
+            rolesNeeded: data.rolesNeeded ?? (data.openSlots || []).map((slot: any) => slot.role),
+            isOpen: data.isOpen ?? true,
+          });
           await get().loadTeams();
           set({ activeTeamId: team.id });
           get().pushToast({ label: 'Success', body: `Team "${team.name}" created`, tone: 'good' });

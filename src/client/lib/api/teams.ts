@@ -28,9 +28,11 @@ export interface TeamMember {
 
 export interface CreateTeamData {
   name: string;
-  hackathonId?: string;
+  hackathonId?: string | null;
   description?: string;
+  maxMembers?: number;
   rolesNeeded?: string[];
+  isOpen?: boolean;
 }
 
 export async function listMyTeams(): Promise<Team[]> {

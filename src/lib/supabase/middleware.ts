@@ -46,6 +46,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL(user ? '/profile' : '/sign-in', request.url));
   }
 
+  // API routes perform their own authentication and must remain reachable for
+  // the profile verification form (otherwise fetch receives a redirect/HTML
+  // response instead of the JSON OTP response). OAuth callbacks are also
+  // allowed to finish before the verification lock is applied.
+  if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) {
+    return supabaseResponse;
+  }
+
   // Redirect authenticated users from landing page to discover
   if (user && pathname === '/') {
     return NextResponse.redirect(new URL('/discover', request.url));

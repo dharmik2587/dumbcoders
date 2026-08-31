@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
 
     // 3. Send email with OTP
     const emailResult = await sendCollegeVerificationEmail(email, otp, collegeName);
+    if (!emailResult && process.env.NODE_ENV !== 'development') {
+      return failure('EMAIL_NOT_CONFIGURED', 'Verification email service is not configured.', 503);
+    }
 
     console.log(`[College Verification] OTP for ${user.id} (${email}): ${otp}`);
 
