@@ -395,13 +395,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("hackmate.rail", collapsed ? "1" : "0");
   }, [collapsed]);
 
-  // Client-side verification guard
-  useEffect(() => {
-    if (!me?.id) return;
-    if (me.verified === false && pathname !== '/profile') {
-      router.replace('/profile');
-    }
-  }, [me, router, pathname]);
+  // Client-side verification guard (removed so user can navigate while unverified)
+  // useEffect(() => {
+  //   if (!me?.id) return;
+  //   if (me.verified === false && pathname !== '/profile') {
+  //     router.replace('/profile');
+  //   }
+  // }, [me, router, pathname]);
 
   useEffect(() => setMobileNav(false), [pathname]);
 
